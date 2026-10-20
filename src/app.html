@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECO 414 Classroom Games</title>
+<meta name="description" content="Ultimatum and Dictator games for the classroom. Works offline.">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root {
+  --bg: #f6f6f4; --surface: #fcfcfb; --card: #ffffff; --ink: #1c1c1a; --ink2: #55554f; --muted: #8a8a83;
+  --line: #e2e2dc; --accent: #2563eb; --accent-ink: #ffffff; --ug: #2563eb; --dg: #d97706;
+  --ok: #15803d; --bad: #b91c1c; --soft: #eef2fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121211; --surface: #1a1a19; --card: #20201e; --ink: #ecece8; --ink2: #b9b9b2; --muted: #8b8b84;
+    --line: #34342f; --accent: #3b82f6; --accent-ink: #ffffff; --ug: #3b82f6; --dg: #d97706;
+    --ok: #4ade80; --bad: #f87171; --soft: #1d2433;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121211; --surface: #1a1a19; --card: #20201e; --ink: #ecece8; --ink2: #b9b9b2; --muted: #8b8b84;
+  --line: #34342f; --accent: #3b82f6; --accent-ink: #ffffff; --ug: #3b82f6; --dg: #d97706;
+  --ok: #4ade80; --bad: #f87171; --soft: #1d2433;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+header { background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+header h1 { font-size: 17px; margin: 0; flex: 1; }
+header button { font-size: 14px; }
+main { max-width: 760px; margin: 0 auto; padding: 16px; }
+main.wide { max-width: 1100px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+h2 { font-size: 22px; margin: 0 0 8px; }
+h3 { font-size: 17px; margin: 18px 0 6px; }
+p { margin: 8px 0; }
+.muted { color: var(--muted); }
+.sub { color: var(--ink2); }
+button, .btn { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.big { font-size: 18px; padding: 14px 22px; width: 100%; margin-top: 10px; }
+button.link { border: none; background: none; color: var(--accent); padding: 4px; text-decoration: underline; }
+button:disabled { opacity: .5; cursor: default; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+.choice { text-align: left; padding: 16px; border-radius: 12px; }
+.choice b { display: block; font-size: 17px; margin-bottom: 4px; }
+.choice span { color: var(--ink2); font-size: 14px; }
+label { display: block; font-weight: 600; margin: 12px 0 4px; }
+input[type=text], input[type=number], select, textarea { font: inherit; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+textarea { min-height: 110px; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+.amount { font-size: 40px; font-weight: 700; text-align: center; margin: 8px 0 0; font-variant-numeric: tabular-nums; }
+.split { display: flex; justify-content: space-between; color: var(--ink2); font-size: 15px; margin-top: 4px; }
+input[type=range] { width: 100%; height: 36px; accent-color: var(--accent); }
+.stepper { display: flex; gap: 8px; justify-content: center; margin-top: 6px; }
+.stepper button { min-width: 64px; }
+.code { font: 700 26px/1.3 ui-monospace, Consolas, monospace; letter-spacing: 1px; text-align: center; background: var(--soft); border-radius: 10px; padding: 14px; word-break: break-all; user-select: all; }
+.qr { display: flex; justify-content: center; margin: 14px 0; }
+.qr svg, .qr img { width: 220px; height: 220px; background: #fff; padding: 8px; border-radius: 8px; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--soft); font-size: 13px; color: var(--ink2); }
+.result { font-size: 20px; font-weight: 700; }
+.result.ok { color: var(--ok); } .result.bad { color: var(--bad); }
+.handoff { text-align: center; padding: 40px 20px; }
+.handoff .big-emoji { font-size: 56px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; font-variant-numeric: tabular-nums; }
+th { color: var(--ink2); font-weight: 600; }
+td.num, th.num { text-align: right; }
+.tablewrap { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.stat .v { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 13px; color: var(--ink2); }
+.legend { display: flex; gap: 16px; font-size: 14px; color: var(--ink2); margin: 6px 0; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.chart { width: 100%; position: relative; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--ink2); font-size: 12px; }
+.chart .axis { stroke: var(--line); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; display: none; z-index: 5; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.tabs button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+video { width: 100%; max-width: 420px; border-radius: 10px; background: #000; }
+.notice { background: var(--soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.err { color: var(--bad); font-size: 14px; }
+footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 16px 30px; }
+@media print { header, footer, .noprint { display: none; } body { background: #fff; } .card { border: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>ECO 414 Classroom Games</h1>
+  <button id="homeBtn" class="noprint" type="button">Home</button>
+</header>
+<main id="app"></main>
+<footer class="noprint">Works without internet once loaded. <button class="link" type="button" id="lectLink">Lecturer</button></footer>
+<div class="tip" id="tip"></div>
+
+<!--VENDOR_QRCODE-->
+<!--VENDOR_JSQR-->
+<script>
+"use strict";
+/* ---------- storage (never required: the app works without it) ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("eco414." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("eco414." + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem("eco414." + k); } catch (e) {} }
+};
+const settings = Object.assign({ stake: 1000, step: 50, cur: "MWK" }, store.get("settings", {}));
+const app = document.getElementById("app");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = (x) => settings.cur + " " + Number(x).toLocaleString();
+const nick = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+const randId = () => { const a = "ABCDEFGHJKLMNPQRSTUVWXYZ"; let s = ""; for (let i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; };
+function view(html, wide) { app.className = wide ? "wide" : ""; app.innerHTML = html; window.scrollTo(0, 0); }
+const $ = (id) => document.getElementById(id);
+
+/* ---------- amount picker ---------- */
+function picker(id, start) {
+  const s = settings.stake, st = settings.step;
+  return `<div class="amount" id="${id}_v"></div>
+  <div class="split"><span id="${id}_keep"></span><span id="${id}_give"></span></div>
+  <input type="range" id="${id}" min="0" max="${s}" step="${st}" value="${start}" aria-label="Amount">
+  <div class="stepper"><button type="button" data-d="-1" data-for="${id}">− ${st}</button><button type="button" data-d="1" data-for="${id}">+ ${st}</button></div>`;
+}
+function wirePicker(id, keepLabel, giveLabel) {
+  const r = $(id);
+  const upd = () => {
+    const v = +r.value;
+    $(id + "_v").textContent = money(v);
+    if (keepLabel) { $(id + "_keep").textContent = keepLabel + ": " + money(settings.stake - v); $(id + "_give").textContent = giveLabel + ": " + money(v); }
+  };
+  r.addEventListener("input", upd);
+  document.querySelectorAll(`[data-for="${id}"]`).forEach((b) => b.addEventListener("click", () => {
+    r.value = Math.min(settings.stake, Math.max(0, +r.value + (+b.dataset.d) * settings.step)); upd();
+  }));
+  upd();
+}
+
+/* ---------- QR ---------- */
+function qrSvg(text) {
+  try { const q = qrcode(0, "M"); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); }
+  catch (e) { return ""; }
+}
+
+/* ---------- home ---------- */
+function home() {
+  view(`<div class="card">
+    <h2>Welcome</h2>
+    <p class="sub">Two classic games about fairness and self-interest. Your lecturer will tell you which one to play.</p>
+    <div class="grid2" style="margin-top:14px">
+      <button class="choice" type="button" id="goSolo"><b>Play on my own</b><span>Make all your decisions now. You are matched with a random classmate later.</span></button>
+      <button class="choice" type="button" id="goPair"><b>Play with a partner</b><span>Two players share this screen and play live.</span></button>
+    </div>
+    <p class="muted" style="margin-top:14px">Stake: ${money(settings.stake)} <button class="link" type="button" id="chgStake">change</button></p>
+  </div>`);
+  $("goSolo").onclick = soloStart; $("goPair").onclick = pairStart;
+  $("chgStake").onclick = stakeSettings;
+}
+function stakeSettings(back) {
+  view(`<div class="card"><h2>Game settings</h2><p class="sub">Use the values your lecturer gives you.</p>
+    <label for="sStake">Amount to divide</label><input type="number" id="sStake" min="10" step="10" value="${settings.stake}">
+    <label for="sStep">Offers move in steps of</label><input type="number" id="sStep" min="1" value="${settings.step}">
+    <label for="sCur">Currency</label><input type="text" id="sCur" maxlength="6" value="${esc(settings.cur)}">
+    <p class="err" id="sErr"></p>
+    <button class="primary big" type="button" id="sSave">Save</button></div>`);
+  $("sSave").onclick = () => {
+    const stake = Math.round(+$("sStake").value), step = Math.round(+$("sStep").value);
+    if (!(stake >= 10) || !(step >= 1) || stake % step) { $("sErr").textContent = "The amount must be a multiple of the step."; return; }
+    settings.stake = stake; settings.step = step; settings.cur = ($("sCur").value || "MWK").trim().slice(0, 6);
+    store.set("settings", settings); (typeof back === "function" ? back : home)();
+  };
+}
+
+/* ---------- solo: strategy method ---------- */
+function soloStart() {
+  const prev = store.get("solo", null);
+  view(`<div class="card"><h2>Play on my own</h2>
+    <p>You will make <b>three decisions</b> about how to divide <b>${money(settings.stake)}</b>. Afterwards your lecturer pairs everyone at random, so you do not know who your partner is.</p>
+    <label for="nk">Your nickname or student number</label>
+    <input type="text" id="nk" maxlength="10" placeholder="e.g. TAWONGA or 2023045" value="${prev ? esc(prev.n) : ""}">
+    <p class="muted">Letters and numbers only, up to 10. Leave blank to get a random ID.</p>
+    <button class="primary big" type="button" id="go">Start</button></div>`);
+  $("go").onclick = () => {
+    const n = nick($("nk").value) || randId();
+    S = { n, stake: settings.stake };
+    soloOffer();
+  };
+}
+let S = null;
+function soloOffer() {
+  view(`<div class="card"><span class="pill">Decision 1 of 3 · Ultimatum Game, as Proposer</span>
+    <h2>How much do you offer?</h2>
+    <p>You have <b>${money(S.stake)}</b>. Offer part of it to your partner. If your partner <b>accepts</b>, you each get your share. If your partner <b>rejects</b>, <b>both of you get nothing</b>.</p>
+    ${picker("o", S.o != null ? S.o : settings.stake / 2 - ((settings.stake / 2) % settings.step))}
+    <button class="primary big" type="button" id="next">Next</button></div>`);
+  wirePicker("o", "You keep", "Partner gets");
+  $("next").onclick = () => { S.o = +$("o").value; soloMin(); };
+}
+function soloMin() {
+  view(`<div class="card"><span class="pill">Decision 2 of 3 · Ultimatum Game, as Responder</span>
+    <h2>What is the smallest offer you would accept?</h2>
+    <p>Now someone else is the Proposer and makes you an offer out of <b>${money(S.stake)}</b>. Any offer <b>at or above</b> your answer is accepted. Any offer below it is rejected, and then <b>both of you get nothing</b>.</p>
+    ${picker("m", S.m != null ? S.m : 0)}
+    <button class="primary big" type="button" id="next">Next</button> <button class="link" type="button" id="back">Back</button></div>`);
+  wirePicker("m");
+  $("back").onclick = () => { S.m = +$("m").value; soloOffer(); };
+  $("next").onclick = () => { S.m = +$("m").value; soloGift(); };
+}
+function soloGift() {
+  view(`<div class="card"><span class="pill">Decision 3 of 3 · Dictator Game</span>
+    <h2>How much do you give?</h2>
+    <p>You have another <b>${money(S.stake)}</b>. This time your partner <b>cannot refuse</b>: whatever you give, they receive, and you keep the rest.</p>
+    ${picker("g", S.g != null ? S.g : 0)}
+    <button class="primary big" type="button" id="next">Next</button> <button class="link" type="button" id="back">Back</button></div>`);
+  wirePicker("g", "You keep", "Partner gets");
+  $("back").onclick = () => { S.g = +$("g").value; soloMin(); };
+  $("next").onclick = () => { S.g = +$("g").value; soloGuess(); };
+}
+function soloGuess() {
+  view(`<div class="card"><span class="pill">One last question</span>
+    <h2>What do you think the average offer in the class will be?</h2>
+    <p>In the Ultimatum Game (decision 1). There is no right answer.</p>
+    ${picker("b", S.b != null ? S.b : settings.stake / 2 - ((settings.stake / 2) % settings.step))}
+    <button class="primary big" type="button" id="next">Finish</button> <button class="link" type="button" id="back">Back</button></div>`);
+  wirePicker("b");
+  $("back").onclick = () => { S.b = +$("b").value; soloGift(); };
+  $("next").onclick = () => { S.b = +$("b").value; store.set("solo", S); showCode(soloCode(S), "solo"); };
+}
+const soloCode = (s) => `S-${s.n}-${s.o}-${s.m}-${s.g}-${s.b}-${s.stake}`;
+
+/* ---------- pair: direct method on one screen ---------- */
+let P = null;
+function pairStart() {
+  view(`<div class="card"><h2>Play with a partner</h2>
+    <p>Two players share this screen. <b>Player A</b> makes an offer in the Ultimatum Game and <b>Player B</b> accepts or rejects it. Then you swap roles: <b>Player B</b> plays the Dictator Game.</p>
+    <div class="grid2"><div><label for="na">Player A nickname</label><input type="text" id="na" maxlength="10"></div>
+    <div><label for="nb">Player B nickname</label><input type="text" id="nb" maxlength="10"></div></div>
+    <p class="muted">Letters and numbers only. Leave blank for random IDs.</p>
+    <button class="primary big" type="button" id="go">Start</button></div>`);
+  $("go").onclick = () => {
+    let a = nick($("na").value) || randId(), b = nick($("nb").value) || randId();
+    if (a === b) b = b.slice(0, 9) + "2";
+    P = { a, b, stake: settings.stake }; handoff(P.a, P.b, pairOffer);
+  };
+}
+function handoff(to, away, next) {
+  view(`<div class="card handoff"><div class="big-emoji" aria-hidden="true">🔁</div>
+    <h2>${esc(to)}, it is your turn</h2><p class="sub">${esc(away)}, please look away from the screen.</p>
+    <button class="primary big" type="button" id="ready">I am ${esc(to)}, show my screen</button></div>`);
+  $("ready").onclick = next;
+}
+function pairOffer() {
+  view(`<div class="card"><span class="pill">Ultimatum Game · ${esc(P.a)} is the Proposer</span>
+    <h2>How much do you offer ${esc(P.b)}?</h2>
+    <p>You have <b>${money(P.stake)}</b>. If ${esc(P.b)} accepts, you each get your share. If ${esc(P.b)} rejects, <b>both of you get nothing</b>.</p>
+    ${picker("o", settings.stake / 2 - ((settings.stake / 2) % settings.step))}
+    <button class="primary big" type="button" id="next">Make this offer</button></div>`);
+  wirePicker("o", "You keep", P.b + " gets");
+  $("next").onclick = () => { P.o = +$("o").value; handoff(P.b, P.a, pairRespond); };
+}
+function pairRespond() {
+  view(`<div class="card"><span class="pill">Ultimatum Game · ${esc(P.b)} is the Responder</span>
+    <h2>${esc(P.a)} offers you ${money(P.o)}</h2>
+    <p>${esc(P.a)} would keep <b>${money(P.stake - P.o)}</b>. If you reject, <b>both of you get nothing</b>.</p>
+    <div class="grid2"><button class="primary big" type="button" id="acc">Accept</button><button class="big" type="button" id="rej">Reject</button></div></div>`);
+  $("acc").onclick = () => { P.r = "A"; pairUResult(); };
+  $("rej").onclick = () => { P.r = "R"; pairUResult(); };
+}
+function pairUResult() {
+  const ok = P.r === "A";
+  view(`<div class="card"><span class="pill">Ultimatum Game · result</span>
+    <p class="result ${ok ? "ok" : "bad"}">${ok ? "Offer accepted" : "Offer rejected"}</p>
+    <table><tr><th>Player</th><th class="num">Earns</th></tr>
+    <tr><td>${esc(P.a)} (Proposer)</td><td class="num">${money(ok ? P.stake - P.o : 0)}</td></tr>
+    <tr><td>${esc(P.b)} (Responder)</td><td class="num">${money(ok ? P.o : 0)}</td></tr></table>
+    <p class="sub" style="margin-top:14px">Now swap roles for the Dictator Game.</p>
+    <button class="primary big" type="button" id="next">Continue</button></div>`);
+  $("next").onclick = () => handoff(P.b, P.a, pairGift);
+}
+function pairGift() {
+  view(`<div class="card"><span class="pill">Dictator Game · ${esc(P.b)} decides</span>
+    <h2>How much do you give ${esc(P.a)}?</h2>
+    <p>You have <b>${money(P.stake)}</b>. ${esc(P.a)} <b>cannot refuse</b>: whatever you give, they receive, and you keep the rest.</p>
+    ${picker("g", 0)}
+    <button class="primary big" type="button" id="next">Give this amount</button></div>`);
+  wirePicker("g", "You keep", P.a + " gets");
+  $("next").onclick = () => { P.g = +$("g").value; store.set("pair", P); pairDone(); };
+}
+function pairDone() {
+  const ok = P.r === "A";
+  const ua = ok ? P.stake - P.o : 0, ub = ok ? P.o : 0;
+  view(`<div class="card"><h2>Both games finished</h2>
+    <table><tr><th>Player</th><th class="num">Ultimatum</th><th class="num">Dictator</th><th class="num">Total</th></tr>
+    <tr><td>${esc(P.a)}</td><td class="num">${money(ua)}</td><td class="num">${money(P.g)}</td><td class="num"><b>${money(ua + P.g)}</b></td></tr>
+    <tr><td>${esc(P.b)}</td><td class="num">${money(ub)}</td><td class="num">${money(P.stake - P.g)}</td><td class="num"><b>${money(ub + P.stake - P.g)}</b></td></tr></table>
+    <button class="primary big" type="button" id="next">Show code for the lecturer</button></div>`);
+  $("next").onclick = () => showCode(pairCode(P), "pair");
+}
+const pairCode = (p) => `P-${p.a}-${p.b}-${p.o}-${p.r}-${p.g}-${p.stake}`;
+
+/* ---------- hand-in screen ---------- */
+function showCode(code, kind) {
+  view(`<div class="card" style="text-align:center"><h2>Hand in your result</h2>
+    <p class="sub">Show this screen to your lecturer, or send the code exactly as written.</p>
+    <div class="qr">${qrSvg(code)}</div>
+    <div class="code" id="code">${esc(code)}</div>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button type="button" id="copy">Copy code</button>
+      <button type="button" id="save">Save as file</button>
+      ${kind === "solo" ? '<button type="button" id="edit">Change my answers</button>' : ""}
+    </div>
+    <p class="muted" id="msg"></p>
+    <button class="big" type="button" id="new">Next player (clear this screen)</button></div>`);
+  $("copy").onclick = async () => {
+    try { await navigator.clipboard.writeText(code); $("msg").textContent = "Copied."; }
+    catch (e) { $("msg").textContent = "Select the code and copy it by hand."; }
+  };
+  $("save").onclick = () => download(`eco414-${code.split("-")[1]}.txt`, code + "\n", "text/plain");
+  if ($("edit")) $("edit").onclick = soloOffer;
+  $("new").onclick = () => { if (confirm("Clear this screen for the next player?")) { store.del("solo"); store.del("pair"); S = P = null; home(); } };
+}
+function download(name, text, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ---------- lecturer: collection ---------- */
+const RE = /\b(?:S-([A-Z0-9]{1,10})-(\d+)-(\d+)-(\d+)-(\d+)-(\d+)|P-([A-Z0-9]{1,10})-([A-Z0-9]{1,10})-(\d+)-([AR])-(\d+)-(\d+))\b/g;
+function parseCodes(text) {
+  const out = []; let m;
+  const t = String(text).toUpperCase(); RE.lastIndex = 0;
+  while ((m = RE.exec(t))) {
+    if (m[1]) {
+      const r = { t: "S", n: m[1], o: +m[2], m: +m[3], g: +m[4], b: +m[5], stake: +m[6] };
+      if (r.stake > 0 && r.o <= r.stake && r.m <= r.stake && r.g <= r.stake && r.b <= r.stake) out.push(r);
+    } else {
+      const r = { t: "P", a: m[7], b: m[8], o: +m[9], r: m[10], g: +m[11], stake: +m[12] };
+      if (r.stake > 0 && r.o <= r.stake && r.g <= r.stake) out.push(r);
+    }
+  }
+  return out;
+}
+const keyOf = (r) => r.t === "S" ? "S:" + r.n : "P:" + r.a + ":" + r.b;
+let DATA = store.get("data", []);
+function addRecords(recs) {
+  let added = 0, replaced = 0;
+  for (const r of recs) {
+    const k = keyOf(r), i = DATA.findIndex((d) => keyOf(d) === k);
+    if (i >= 0) { if (JSON.stringify(DATA[i]) !== JSON.stringify(r)) { DATA[i] = r; replaced++; } }
+    else { DATA.push(r); added++; }
+  }
+  store.set("data", DATA); return { added, replaced, found: recs.length };
+}
+
+let LTAB = "collect";
+function lecturer(tab) {
+  if (tab) LTAB = tab;
+  const nS = DATA.filter((d) => d.t === "S").length, nP = DATA.filter((d) => d.t === "P").length;
+  const tabs = [["collect", "Collect results"], ["results", "Class results"], ["match", "Match and pay"], ["data", "Data"]];
+  view(`<div class="tabs noprint">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" class="${LTAB === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    <p class="muted">${nS} solo player${nS === 1 ? "" : "s"} and ${nP} pair${nP === 1 ? "" : "s"} collected.</p>
+    <div id="lt"></div>`, LTAB !== "collect");
+  document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { stopCam(); lecturer(b.dataset.tab); }));
+  ({ collect: lCollect, results: lResults, match: lMatch, data: lData })[LTAB]();
+}
+function lCollect() {
+  $("lt").innerHTML = `<div class="card"><h2>Collect results</h2>
+    <h3>1. Type or paste codes</h3>
+    <p class="sub">Paste as many codes as you like, for example a batch copied from a WhatsApp group. Anything that is not a code is ignored.</p>
+    <textarea id="paste" placeholder="S-TAWONGA-500-300-200-400-1000"></textarea>
+    <button class="primary" type="button" id="addBtn" style="margin-top:8px">Add codes</button>
+    <h3>2. Scan QR codes with the camera</h3>
+    <p class="sub">Point the camera at each student's screen. Each new code beeps once.</p>
+    <button type="button" id="camBtn">Start camera</button>
+    <div id="camBox" style="margin-top:10px"></div>
+    <h3>3. Import result files</h3>
+    <p class="sub">For lab computers: students press <i>Save as file</i> to a shared folder or USB stick; select all the files here.</p>
+    <input type="file" id="files" multiple accept=".txt,text/plain">
+    <p id="cmsg" class="notice" style="margin-top:14px">Ready.</p>
+    <h3>Game settings for students</h3>
+    <p class="sub">Students on this device use ${money(settings.stake)} in steps of ${settings.step}. <button class="link" type="button" id="cset">Change</button></p>
+  </div>`;
+  const report = (res, src) => {
+    $("cmsg").textContent = res.found === 0 ? `No valid codes found in ${src}.` :
+      res.added + res.replaced === 0 ? `Those codes were already collected. Total collected: ${DATA.length}.` :
+      `${res.added} new, ${res.replaced} updated from ${src}. Total collected: ${DATA.length}.`;
+  };
+  $("addBtn").onclick = () => { const recs = parseCodes($("paste").value); report(addRecords(recs), "the text"); if (recs.length) $("paste").value = ""; };
+  $("files").onchange = async (e) => {
+    let txt = ""; for (const f of e.target.files) txt += (await f.text()) + "\n";
+    report(addRecords(parseCodes(txt)), e.target.files.length + " file(s)"); e.target.value = "";
+  };
+  $("camBtn").onclick = () => (CAM ? stopCam() : startCam(report));
+  $("cset").onclick = () => stakeSettings(() => lecturer("collect"));
+}
+let CAM = null;
+async function startCam(report) {
+  if (!navigator.mediaDevices || typeof jsQR !== "function") { $("cmsg").textContent = "This browser cannot use the camera here. Use typed codes or files."; return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    $("camBox").innerHTML = '<video id="vid" playsinline muted></video>';
+    const v = $("vid"); v.srcObject = stream; await v.play();
+    const c = document.createElement("canvas"), ctx = c.getContext("2d", { willReadFrequently: true });
+    let last = "";
+    CAM = { stream, timer: setInterval(() => {
+      if (!v.videoWidth) return;
+      c.width = v.videoWidth; c.height = v.videoHeight; ctx.drawImage(v, 0, 0);
+      const q = jsQR(ctx.getImageData(0, 0, c.width, c.height).data, c.width, c.height, { inversionAttempts: "dontInvert" });
+      if (q && q.data && q.data !== last) {
+        last = q.data; const res = addRecords(parseCodes(q.data));
+        if (res.added + res.replaced) { beep(); report(res, "the camera"); }
+      }
+    }, 250) };
+    $("camBtn").textContent = "Stop camera";
+  } catch (e) { $("cmsg").textContent = "Camera not available (" + e.name + "). Use typed codes or files."; }
+}
+function stopCam() {
+  if (!CAM) return; clearInterval(CAM.timer); CAM.stream.getTracks().forEach((t) => t.stop()); CAM = null;
+  if ($("camBox")) $("camBox").innerHTML = ""; if ($("camBtn")) $("camBtn").textContent = "Start camera";
+}
+function beep() {
+  try { const a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(); o.frequency.value = 880; o.connect(a.destination); o.start(); o.stop(a.currentTime + 0.12); } catch (e) {}
+}
+
+/* ---------- lecturer: results ---------- */
+const pct = (x, s) => (100 * x) / s;
+const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN);
+const median = (a) => { if (!a.length) return NaN; const b = [...a].sort((x, y) => x - y), k = b.length >> 1; return b.length % 2 ? b[k] : (b[k - 1] + b[k]) / 2; };
+const f0 = (x) => (isNaN(x) ? "–" : Math.round(x) + "%");
+const BINS = ["0%", "1–10%", "11–20%", "21–30%", "31–40%", "41–50%", "51–60%", "61–70%", "71–80%", "81–90%", "91–100%"];
+const binOf = (p) => (p <= 0 ? 0 : Math.min(10, Math.ceil(p / 10)));
+function shares(ps) { const c = new Array(11).fill(0); ps.forEach((p) => c[binOf(p)]++); return c.map((x) => (ps.length ? (100 * x) / ps.length : 0)); }
+
+function lResults() {
+  const s = DATA.filter((d) => d.t === "S"), p = DATA.filter((d) => d.t === "P");
+  if (!DATA.length) { $("lt").innerHTML = `<div class="card"><p>No results yet. Collect codes first.</p></div>`; return; }
+  const offers = [...s.map((d) => pct(d.o, d.stake)), ...p.map((d) => pct(d.o, d.stake))];
+  const gifts = [...s.map((d) => pct(d.g, d.stake)), ...p.map((d) => pct(d.g, d.stake))];
+  const mins = s.map((d) => pct(d.m, d.stake)), guesses = s.map((d) => pct(d.b, d.stake));
+  const rej = p.filter((d) => d.r === "R").length;
+  const fair = offers.filter((x) => x >= 40 && x <= 50).length;
+  $("lt").innerHTML = `<div class="card"><h2>Class results</h2>
+    <p class="sub">All amounts are shown as a share of the stake, so different stakes can be combined.</p>
+    <div class="stats">
+      <div class="stat"><div class="v">${f0(mean(offers))}</div><div class="l">Average Ultimatum offer (median ${f0(median(offers))})</div></div>
+      <div class="stat"><div class="v">${f0(mean(gifts))}</div><div class="l">Average Dictator gift (median ${f0(median(gifts))})</div></div>
+      <div class="stat"><div class="v">${f0((100 * fair) / offers.length)}</div><div class="l">Offered 40–50% in the Ultimatum Game</div></div>
+      <div class="stat"><div class="v">${f0((100 * gifts.filter((x) => x === 0).length) / gifts.length)}</div><div class="l">Gave nothing in the Dictator Game</div></div>
+      ${s.length ? `<div class="stat"><div class="v">${f0(mean(mins))}</div><div class="l">Average minimum acceptable offer</div></div>
+      <div class="stat"><div class="v">${f0(mean(guesses))}</div><div class="l">Average guess of the class offer (actual ${f0(mean(offers))})</div></div>` : ""}
+      ${p.length ? `<div class="stat"><div class="v">${rej} of ${p.length}</div><div class="l">Live offers rejected (pairs)</div></div>` : ""}
+    </div>
+    <h3>Ultimatum offers and Dictator gifts</h3>
+    <p class="sub">Share of players choosing each amount. If people only cared about money, Ultimatum offers would be tiny and Dictator gifts zero.</p>
+    <div class="legend"><span><i style="background:var(--ug)"></i>Ultimatum offer</span><span><i style="background:var(--dg)"></i>Dictator gift</span></div>
+    <div class="chart" id="ch1"></div>
+    ${s.length ? `<h3>Would the offer be accepted?</h3>
+    <p class="sub">Share of responders who would accept an offer of each size, from the minimum acceptable offers (${s.length} players).</p>
+    <div class="chart" id="ch2"></div>` : ""}
+    ${p.length ? `<h3>Live pairs: rejections by offer</h3><div class="tablewrap">${rejTable(p)}</div>` : ""}
+    <div class="row noprint" style="margin-top:14px"><button type="button" onclick="window.print()">Print / save as PDF</button></div>
+  </div>`;
+  barChart($("ch1"), shares(offers), shares(gifts), offers.length, gifts.length);
+  if (s.length) acceptChart($("ch2"), mins);
+}
+function rejTable(p) {
+  const rows = BINS.map((b, i) => { const g = p.filter((d) => binOf(pct(d.o, d.stake)) === i); return [b, g.length, g.filter((d) => d.r === "R").length]; }).filter((r) => r[1]);
+  return `<table><tr><th>Offer</th><th class="num">Pairs</th><th class="num">Rejected</th><th class="num">Rejection rate</th></tr>
+    ${rows.map(([b, n, r]) => `<tr><td>${b}</td><td class="num">${n}</td><td class="num">${r}</td><td class="num">${Math.round((100 * r) / n)}%</td></tr>`).join("")}</table>`;
+}
+const tip = $("tip");
+function hover(el, chart, html) {
+  el.addEventListener("mousemove", (e) => { const r = chart.getBoundingClientRect(); tip.innerHTML = html; tip.style.display = "block"; tip.style.left = e.clientX + 12 + "px"; tip.style.top = e.clientY + window.scrollY - 34 + "px"; });
+  el.addEventListener("mouseleave", () => (tip.style.display = "none"));
+}
+function barChart(host, a, b, na, nb) {
+  const W = 860, H = 300, L = 44, R = 10, T = 14, B = 46, n = 11, gw = (W - L - R) / n, bw = Math.min(22, (gw - 10) / 2);
+  const top = Math.max(10, Math.ceil(Math.max(...a, ...b) / 10) * 10), y = (v) => T + (H - T - B) * (1 - v / top);
+  let g = "";
+  for (let t = 0; t <= top; t += top > 50 ? 20 : 10) g += `<line class="axis" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke-width="1"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`;
+  const bar = (x, v, col, cls) => { const h = Math.max(0, y(0) - y(v)), r = Math.min(4, h); return v > 0 ? `<path class="${cls}" d="M${x},${y(0)} v${-(h - r)} q0,${-r} ${r},${-r} h${bw - 2 * r} q${r},0 ${r},${r} v${h - r} z" fill="${col}"/>` : ""; };
+  for (let i = 0; i < n; i++) {
+    const x0 = L + i * gw + (gw - 2 * bw - 2) / 2;
+    g += `<g data-i="${i}">${bar(x0, a[i], "var(--ug)", "")}${bar(x0 + bw + 2, b[i], "var(--dg)", "")}<rect x="${L + i * gw}" y="${T}" width="${gw}" height="${H - T - B}" fill="transparent"/></g>`;
+    g += `<text x="${L + i * gw + gw / 2}" y="${H - B + 16}" text-anchor="middle">${BINS[i]}</text>`;
+  }
+  g += `<text x="${(W + L) / 2}" y="${H - 6}" text-anchor="middle">Amount given, as a share of the stake</text>`;
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Distribution of Ultimatum offers and Dictator gifts">${g}</svg>`;
+  host.querySelectorAll("g[data-i]").forEach((el) => { const i = +el.dataset.i; hover(el, host, `<b>${BINS[i]}</b><br>Ultimatum: ${Math.round(a[i])}% of ${na}<br>Dictator: ${Math.round(b[i])}% of ${nb}`); });
+}
+function acceptChart(host, mins) {
+  const W = 860, H = 260, L = 44, R = 16, T = 14, B = 46;
+  const xs = Array.from({ length: 11 }, (_, i) => i * 10), acc = xs.map((x) => (100 * mins.filter((m) => m <= x + 1e-9).length) / mins.length);
+  const X = (v) => L + ((W - L - R) * v) / 100, Y = (v) => T + (H - T - B) * (1 - v / 100);
+  let g = "";
+  for (let t = 0; t <= 100; t += 25) g += `<line class="axis" x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${L - 6}" y="${Y(t) + 4}" text-anchor="end">${t}%</text>`;
+  xs.forEach((x) => (g += `<text x="${X(x)}" y="${H - B + 16}" text-anchor="middle">${x}%</text>`));
+  g += `<path d="${xs.map((x, i) => (i ? "L" : "M") + X(x) + "," + Y(acc[i])).join(" ")}" fill="none" stroke="var(--ug)" stroke-width="2"/>`;
+  xs.forEach((x, i) => (g += `<circle cx="${X(x)}" cy="${Y(acc[i])}" r="5" fill="var(--ug)" stroke="var(--card)" stroke-width="2"/><circle data-i="${i}" cx="${X(x)}" cy="${Y(acc[i])}" r="16" fill="transparent"/>`));
+  g += `<text x="${(W + L) / 2}" y="${H - 6}" text-anchor="middle">Offer, as a share of the stake</text>`;
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of responders who would accept each offer">${g}</svg>`;
+  host.querySelectorAll("circle[data-i]").forEach((el) => { const i = +el.dataset.i; hover(el, host, `Offer ${xs[i]}%: ${Math.round(acc[i])}% would accept`); });
+}
+
+/* ---------- lecturer: random matching (solo players, ring matching) ---------- */
+function shuffle(a) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+let MATCH = store.get("match", null);
+function runMatch() {
+  const s = DATA.filter((d) => d.t === "S");
+  if (s.length < 2) return null;
+  const pay = Object.fromEntries(s.map((d) => [d.n, { n: d.n, uP: 0, uR: 0, dK: 0, dR: 0, uPartnerP: "", uPartnerR: "", uAcc: "", uRecvAcc: "" }]));
+  const u = shuffle(s), dd = shuffle(s), rows = [];
+  u.forEach((p, i) => {
+    const r = u[(i + 1) % u.length], scale = r.stake / p.stake, offer = p.o * scale, acc = offer >= r.m;
+    pay[p.n].uP = acc ? p.stake - p.o : 0; pay[p.n].uPartnerP = r.n; pay[p.n].uAcc = acc ? "Accepted" : "Rejected";
+    pay[r.n].uR = acc ? offer : 0; pay[r.n].uPartnerR = p.n; pay[r.n].uRecvAcc = acc ? "Accepted" : "Rejected";
+    rows.push({ p: p.n, r: r.n, o: p.o, m: r.m, acc });
+  });
+  dd.forEach((p, i) => { const r = dd[(i + 1) % dd.length]; pay[p.n].dK = p.stake - p.g; pay[r.n].dR += p.g * (r.stake / p.stake); });
+  return { when: new Date().toLocaleString(), rows, pay: Object.values(pay), stake: s[0].stake };
+}
+function lMatch() {
+  const nS = DATA.filter((d) => d.t === "S").length;
+  if (nS < 2) { $("lt").innerHTML = `<div class="card"><h2>Match and pay</h2><p>At least two solo players are needed.</p></div>`; return; }
+  const m = MATCH;
+  const rejected = m ? m.rows.filter((r) => !r.acc).length : 0;
+  $("lt").innerHTML = `<div class="card"><h2>Match and pay</h2>
+    <p class="sub">Each player is randomly matched twice in a ring: once as Proposer and once as Responder, so odd numbers of players work. The Dictator Game uses a new random ring.</p>
+    <button class="primary noprint" type="button" id="mBtn">${m ? "Match again" : "Match players now"}</button>
+    ${m ? `<p class="muted">Matched ${esc(m.when)} · ${m.rows.length} Ultimatum pairs · <b>${rejected}</b> offer${rejected === 1 ? "" : "s"} rejected.</p>
+    <div class="tablewrap"><table><tr><th>Player</th><th>Proposed to</th><th>Result</th><th>Received offer from</th><th>Result</th><th class="num">Ultimatum earnings</th><th class="num">Dictator earnings</th><th class="num">Total</th></tr>
+    ${m.pay.sort((a, b) => a.n.localeCompare(b.n)).map((x) => `<tr><td>${esc(x.n)}</td><td>${esc(x.uPartnerP)}</td><td>${x.uAcc}</td><td>${esc(x.uPartnerR)}</td><td>${x.uRecvAcc}</td>
+      <td class="num">${Math.round(x.uP + x.uR).toLocaleString()}</td><td class="num">${Math.round(x.dK + x.dR).toLocaleString()}</td><td class="num"><b>${Math.round(x.uP + x.uR + x.dK + x.dR).toLocaleString()}</b></td></tr>`).join("")}
+    </table></div>` : ""}
+  </div>`;
+  $("mBtn").onclick = () => { if (MATCH && !confirm("Replace the current matching with a new random one?")) return; MATCH = runMatch(); store.set("match", MATCH); lecturer("match"); };
+}
+
+/* ---------- lecturer: data ---------- */
+function lData() {
+  $("lt").innerHTML = `<div class="card"><h2>Data</h2>
+    <div class="row noprint"><button type="button" id="csv">Download CSV</button><button type="button" id="codes">Download all codes</button><button type="button" id="clr">Clear all data</button></div>
+    <div class="tablewrap" style="margin-top:12px"><table><tr><th>Type</th><th>Player(s)</th><th class="num">Stake</th><th class="num">Offer</th><th>Min / response</th><th class="num">Dictator gift</th><th class="num">Guess</th><th></th></tr>
+    ${DATA.map((d, i) => d.t === "S"
+      ? `<tr><td>Solo</td><td>${esc(d.n)}</td><td class="num">${d.stake}</td><td class="num">${d.o}</td><td>min ${d.m}</td><td class="num">${d.g}</td><td class="num">${d.b}</td><td><button class="link" type="button" data-del="${i}">remove</button></td></tr>`
+      : `<tr><td>Pair</td><td>${esc(d.a)} → ${esc(d.b)}</td><td class="num">${d.stake}</td><td class="num">${d.o}</td><td>${d.r === "A" ? "accepted" : "rejected"}</td><td class="num">${d.g} (${esc(d.b)} → ${esc(d.a)})</td><td class="num">–</td><td><button class="link" type="button" data-del="${i}">remove</button></td></tr>`).join("")}
+    </table></div></div>`;
+  document.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { DATA.splice(+b.dataset.del, 1); store.set("data", DATA); lecturer("data"); }));
+  $("csv").onclick = () => download(`eco414-games-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(), "text/csv");
+  $("codes").onclick = () => download("eco414-codes.txt", DATA.map(codeOf).join("\n") + "\n", "text/plain");
+  $("clr").onclick = () => { if (confirm("Delete all collected results on this device? Download the CSV first if you need it.")) { DATA = []; MATCH = null; store.set("data", DATA); store.del("match"); lecturer("collect"); } };
+}
+const codeOf = (d) => (d.t === "S" ? soloCode(d) : pairCode(d));
+function toCsv() {
+  const pay = MATCH ? Object.fromEntries(MATCH.pay.map((x) => [x.n, x])) : {};
+  const head = "mode,player,partner,stake,ug_offer,ug_min_accept,ug_response,dg_gift,dg_giver,guess_avg_offer,ug_offer_pct,dg_gift_pct,matched_ug_earnings,matched_dg_earnings";
+  const rows = DATA.map((d) => {
+    if (d.t === "S") { const x = pay[d.n]; return ["solo", d.n, "", d.stake, d.o, d.m, "", d.g, d.n, d.b, pct(d.o, d.stake).toFixed(1), pct(d.g, d.stake).toFixed(1), x ? Math.round(x.uP + x.uR) : "", x ? Math.round(x.dK + x.dR) : ""]; }
+    return ["pair", d.a, d.b, d.stake, d.o, "", d.r === "A" ? "accept" : "reject", d.g, d.b, "", pct(d.o, d.stake).toFixed(1), pct(d.g, d.stake).toFixed(1), "", ""];
+  });
+  return head + "\n" + rows.map((r) => r.join(",")).join("\n") + "\n";
+}
+
+/* ---------- routing ---------- */
+$("homeBtn").onclick = () => { stopCam(); home(); };
+$("lectLink").onclick = () => lecturer("collect");
+if (location.hash === "#lecturer") lecturer("collect"); else home();
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
