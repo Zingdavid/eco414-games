@@ -1,65 +1,49 @@
 # ECO 414 Classroom Games: Ultimatum and Dictator
 
-An app for running the Ultimatum and Dictator games in class. **No internet is needed during the class**, and
-there is no server: every computer or phone works on its own, and the lecturer collects the results.
+App: https://zingdavid.github.io/eco414-games/
 
-Online version (for installing on phones and computers): https://zingdavid.github.io/eco414-games/
+An installable app for running the Ultimatum and Dictator games in class. It **works offline**: answers are saved on
+the device and sent automatically when it is next online. Results go to **your Google Sheet** (or, with no internet
+at all, to your laptop), you pair the class with one click, and each student sees their own earnings.
 
-## Two ways to play
+## How a class runs
 
-| Mode | How it works | Best for |
-|---|---|---|
-| **Play on my own** (strategy method) | Each student makes three decisions: an Ultimatum offer, the smallest offer they would accept, and a Dictator gift, plus a guess of the class average. The lecturer's device later pairs everyone at random and works out earnings. | Lab computers or phones, one student per screen |
-| **Play with a partner** | Two students share one screen. A offers, B sees the offer and accepts or rejects; then B plays the Dictator Game. | Showing a live rejection |
+1. **Lecturer:** open the app, click **Lecturer** (bottom of the page), create a **session** (title, amount to divide,
+   steps). Put the **Students join** tab on the projector: it shows a QR code and a 4-character session code.
+2. **Students:** scan the QR code with the phone camera (or open the app and type the code), enter their name, and make
+   four choices: an Ultimatum offer, the smallest offer they would accept, a Dictator gift, and a guess of the class
+   average. They check their answers and submit. No internet? The app says *Saved on this device* and sends the
+   answers later by itself.
+3. **Results** updates as answers arrive. **Present to class** shows them full-screen, without names.
+4. **Pair and pay** pairs everyone at random (each student proposes to one classmate and responds to another; the
+   Dictator Game uses a new random pairing) and works out earnings. Students open **My results** to see what their
+   partner offered or gave and what they earned. They never see who their partner was.
+5. **Data** downloads a CSV. Everything is also in the Google Sheet.
 
-At the end each student sees a short **code** (for example `S-TAWONGA-450-300-200-500-1000`) and a QR code.
+**Play with a partner on this device:** two students share one screen and see a real offer and a live accept or
+reject. Their result is synced the same way.
 
-## Installing on the lab computers
+**Devices that never get online:** the student's screen shows a backup code and QR code; the lecturer scans or pastes
+it under **Add codes**.
 
-**Option A: no internet at all (USB stick).** Copy `ECO414 Games (offline).html` and `install_lab.bat` to a USB
-stick. On each computer, double-click `install_lab.bat`: it puts **ECO414 Games** on the desktop. Open it with
-Chrome or Edge. The file holds everything it needs.
+## Setting up
 
-**Option B: install as an app (needs internet once).** On each computer, open
-https://zingdavid.github.io/eco414-games/ in Edge or Chrome and click **Install** in the address bar (Edge: ... >
-Apps > Install this site as an app). It then opens from the Start menu and works offline.
+- **Google Sheet (once):** follow `backend/SETUP.md`.
+- **Installing on phones and lab computers:** open the app link once while online and choose **Install** (Chrome or
+  Edge: install icon in the address bar; phones: *Add to Home screen*). After that it opens from the home screen or
+  Start menu and works offline. A computer that can never go online can use `ECO414 Games (offline).html` from a USB
+  stick (`install_lab.bat` puts it on the desktop); results from it are collected with backup codes.
 
-Phones: open the same link and choose **Add to Home screen** / **Install app**.
+## No internet at all: the laptop server
 
-## Live results on the lecturer's laptop (local network, no internet)
+`run_games_server.bat` turns the lecturer's laptop into the server. Students on the same Wi-Fi, lab network or the
+laptop's hotspot open the address it shows (or scan the QR code on the **Students join** tab); nothing needs to be
+installed. The lecturer page asks for your PIN (chosen the first time; delete `pin.txt` to change it). Results are
+saved in `results\data.json`. Everything else (sessions, results, pairing, My results) works the same.
 
-1. Double-click `run_games_server.bat` on the lecturer's laptop. A window shows the **student address** (for example
-   `http://192.168.1.23:8080`) and your **lecturer PIN**; the lecturer page opens by itself (`http://localhost:8080/lecturer`).
-   The first time, the window asks you to **choose a PIN** (4 to 8 digits); it is saved in `pin.txt` and used every
-   time after that. To change it, delete `pin.txt` and start the server again.
-   The first time, Windows also asks whether Python may use the network: tick **Private networks** and click **Allow**.
-2. Enter the PIN. The **Students join** tab shows a big QR code and the address: put it on the projector.
-3. Students on the same lab network or Wi-Fi (or the laptop's mobile hotspot) open that address in any browser;
-   nothing needs to be installed on their computers. Results are sent to the laptop as soon as each student finishes.
-4. Students never see the results. The lecturer page updates every 3 seconds; **Present to class** shows the results
-   full-screen for the projector, without names.
-5. The stake set on the lecturer page applies to every student. Results are also saved in `results\` (one file per
-   session), so nothing is lost if the window is closed by mistake; **Data > Clear** starts a new session.
+## Maintenance
 
-If the lab network blocks connections between computers, use the methods below (scan, files or paste) instead.
-
-## Running a class (without the server)
-
-1. Tell students the stake if it is not the default MWK 1,000 (students can change it under *change*).
-2. Students choose **Play on my own**, enter a nickname or student number and make their decisions.
-3. Collect the codes on the lecturer's laptop or phone (click **Lecturer** at the bottom of the page):
-   - **Scan**: *Start camera* and point it at each screen's QR code (a phone works well for walking round a lab);
-   - **Files**: students click *Save as file* into a shared network folder or USB stick, then you select all the files;
-   - **Paste**: students send their codes (for example on WhatsApp) and you paste the whole batch.
-4. **Class results** shows the distribution of offers and gifts, the acceptance curve and beliefs. **Match and
-   pay** pairs players at random and shows each person's earnings. **Data** downloads a CSV for the tutorial.
-5. Students click **Next player** before leaving so the next class starts clean.
-
-Collected results stay in the browser of the device that collected them; download the CSV after class.
-Lab computers that are reset at restart will lose any saved data, so collect before shutting down.
-
-## For maintenance
-
-Edit `src/app.html`, then run `python build.py`. It writes `docs/` (the online app) and the single offline file.
-Change `CACHE` in `build.py` on every update so installed copies refresh. Libraries in `vendor/`:
-qrcode-generator 1.4.4 (Kazuhiko Arase, MIT) and jsQR 1.4.0 (Cosmo Wolfe, Apache-2.0).
+Edit `src/app.html`, then `python build.py` (writes `docs/` and the offline file). Change `CACHE` in `build.py` on every
+update so installed copies refresh. `backend/Code.gs` is the Google Sheet backend; `server.py` implements the same API
+for the laptop. `backend/mock_gas.js` runs `Code.gs` under Node for testing. Libraries in `vendor/`: qrcode-generator
+1.4.4 (Kazuhiko Arase, MIT) and jsQR 1.4.0 (Cosmo Wolfe, Apache-2.0).
