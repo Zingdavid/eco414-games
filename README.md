@@ -29,8 +29,10 @@ Phones: open the same link and choose **Add to Home screen** / **Install app**.
 ## Live results on the lecturer's laptop (local network, no internet)
 
 1. Double-click `run_games_server.bat` on the lecturer's laptop. A window shows the **student address** (for example
-   `http://192.168.1.23:8080`) and a **4-digit PIN**; the lecturer page opens by itself (`http://localhost:8080/lecturer`).
-   The first time, Windows asks whether Python may use the network: tick **Private networks** and click **Allow**.
+   `http://192.168.1.23:8080`) and your **lecturer PIN**; the lecturer page opens by itself (`http://localhost:8080/lecturer`).
+   The first time, the window asks you to **choose a PIN** (4 to 8 digits); it is saved in `pin.txt` and used every
+   time after that. To change it, delete `pin.txt` and start the server again.
+   The first time, Windows also asks whether Python may use the network: tick **Private networks** and click **Allow**.
 2. Enter the PIN. The **Students join** tab shows a big QR code and the address: put it on the projector.
 3. Students on the same lab network or Wi-Fi (or the laptop's mobile hotspot) open that address in any browser;
    nothing needs to be installed on their computers. Results are sent to the laptop as soon as each student finishes.

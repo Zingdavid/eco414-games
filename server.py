@@ -20,7 +20,34 @@ DOCS = ROOT / "docs"
 DATA_DIR = ROOT / "results"
 DATA_DIR.mkdir(exist_ok=True)
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
-PIN = f"{random.randint(0, 9999):04d}"
+PIN_FILE = ROOT / "pin.txt"
+
+
+def get_pin():
+    """Fixed lecturer PIN, chosen once and kept in pin.txt. Delete pin.txt to choose a new one."""
+    try:
+        saved = PIN_FILE.read_text(encoding="utf-8").strip()
+        if re.fullmatch(r"\d{4,8}", saved):
+            return saved
+    except OSError:
+        pass
+    if not sys.stdin or not sys.stdin.isatty():  # started without a window to type in
+        return f"{random.randint(0, 9999):04d}"
+    print("Choose a lecturer PIN (4 to 8 digits). You will use it every time; it is saved on this laptop.")
+    while True:
+        a = input("  New PIN: ").strip()
+        if not re.fullmatch(r"\d{4,8}", a):
+            print("  Use 4 to 8 digits only.")
+            continue
+        if input("  Type it again: ").strip() != a:
+            print("  The two entries differ. Try again.")
+            continue
+        PIN_FILE.write_text(a, encoding="utf-8")
+        print("  Saved.\n")
+        return a
+
+
+PIN = get_pin()
 CODE_RE = re.compile(r"^(S-[A-Z0-9]{1,10}-\d+-\d+-\d+-\d+-\d+|P-[A-Z0-9]{1,10}-[A-Z0-9]{1,10}-\d+-[AR]-\d+-\d+)$")
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript", ".webmanifest": "application/manifest+json",
          ".png": "image/png", ".json": "application/json"}
@@ -151,7 +178,7 @@ def main():
     for ip in ips or ["<no network found: connect to Wi-Fi or start a hotspot>"]:
         print(f"     http://{ip}:{PORT}")
     print(f"\n Lecturer page (this laptop):  http://localhost:{PORT}/lecturer")
-    print(f" Lecturer PIN for today:       {PIN}")
+    print(f" Lecturer PIN:                 {PIN}" + ("   (to change it, delete pin.txt)" if PIN_FILE.exists() else ""))
     print(f"\n Results are saved in: {DATA_DIR}")
     if codes:
         print(f" Resumed today's session: {len(codes)} results already received.")
