@@ -102,6 +102,7 @@ footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px
 <footer class="noprint">Works without internet once loaded. <button class="link" type="button" id="lectLink">Lecturer</button></footer>
 <div class="tip" id="tip"></div>
 
+<!--SERVER-->
 <!--VENDOR_QRCODE-->
 <!--VENDOR_JSQR-->
 <script>
@@ -113,6 +114,16 @@ const store = {
   del(k) { try { localStorage.removeItem("eco414." + k); } catch (e) {} }
 };
 const settings = Object.assign({ stake: 1000, step: 50, cur: "MWK" }, store.get("settings", {}));
+/* SERVER: page was loaded from the lecturer's laptop, so results are sent there and only the lecturer sees them */
+const SERVER = !!window.ECO_SERVER;
+let PIN = ""; try { PIN = sessionStorage.getItem("eco414.pin") || ""; } catch (e) {}
+async function api(path, body) {
+  const opt = body === undefined ? { headers: { "X-Pin": PIN } } :
+    { method: "POST", headers: { "Content-Type": "application/json", "X-Pin": PIN }, body: JSON.stringify(body) };
+  const r = await fetch(path, opt);
+  if (!r.ok) throw new Error(r.status === 403 ? "pin" : "http " + r.status);
+  return r.json();
+}
 const app = document.getElementById("app");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const money = (x) => settings.cur + " " + Number(x).toLocaleString();
@@ -158,10 +169,10 @@ function home() {
       <button class="choice" type="button" id="goSolo"><b>Play on my own</b><span>Make all your decisions now. You are matched with a random classmate later.</span></button>
       <button class="choice" type="button" id="goPair"><b>Play with a partner</b><span>Two players share this screen and play live.</span></button>
     </div>
-    <p class="muted" style="margin-top:14px">Stake: ${money(settings.stake)} <button class="link" type="button" id="chgStake">change</button></p>
+    <p class="muted" style="margin-top:14px">Stake: ${money(settings.stake)} ${SERVER ? "" : '<button class="link" type="button" id="chgStake">change</button>'}</p>
   </div>`);
   $("goSolo").onclick = soloStart; $("goPair").onclick = pairStart;
-  $("chgStake").onclick = stakeSettings;
+  if ($("chgStake")) $("chgStake").onclick = stakeSettings;
 }
 function stakeSettings(back) {
   view(`<div class="card"><h2>Game settings</h2><p class="sub">Use the values your lecturer gives you.</p>
@@ -174,7 +185,9 @@ function stakeSettings(back) {
     const stake = Math.round(+$("sStake").value), step = Math.round(+$("sStep").value);
     if (!(stake >= 10) || !(step >= 1) || stake % step) { $("sErr").textContent = "The amount must be a multiple of the step."; return; }
     settings.stake = stake; settings.step = step; settings.cur = ($("sCur").value || "MWK").trim().slice(0, 6);
-    store.set("settings", settings); (typeof back === "function" ? back : home)();
+    store.set("settings", settings);
+    if (SERVER) api("/api/settings", settings).catch(() => alert("Could not update the server settings."));
+    (typeof back === "function" ? back : home)();
   };
 }
 
@@ -307,6 +320,7 @@ const pairCode = (p) => `P-${p.a}-${p.b}-${p.o}-${p.r}-${p.g}-${p.stake}`;
 
 /* ---------- hand-in screen ---------- */
 function showCode(code, kind) {
+  if (SERVER) return sendCode(code, kind);
   view(`<div class="card" style="text-align:center"><h2>Hand in your result</h2>
     <p class="sub">Show this screen to your lecturer, or send the code exactly as written.</p>
     <div class="qr">${qrSvg(code)}</div>
@@ -325,6 +339,23 @@ function showCode(code, kind) {
   $("save").onclick = () => download(`eco414-${code.split("-")[1]}.txt`, code + "\n", "text/plain");
   if ($("edit")) $("edit").onclick = soloOffer;
   $("new").onclick = () => { if (confirm("Clear this screen for the next player?")) { store.del("solo"); store.del("pair"); S = P = null; home(); } };
+}
+async function sendCode(code, kind) {
+  view(`<div class="card" style="text-align:center"><h2>Sending your result…</h2></div>`);
+  let ok = false;
+  for (let i = 0; i < 3 && !ok; i++) {
+    try { await api("/api/submit", { code }); ok = true; } catch (e) { await new Promise((r) => setTimeout(r, 800)); }
+  }
+  view(`<div class="card" style="text-align:center">
+    ${ok ? `<div class="big-emoji" style="font-size:56px" aria-hidden="true">✅</div><h2>Sent to your lecturer</h2>
+      <p class="sub">Thank you. Your lecturer will show the class results on the projector.</p>`
+         : `<h2>Could not reach the lecturer's computer</h2><p class="sub">Check the network and try again, or show this code to your lecturer.</p>
+      <div class="code">${esc(code)}</div><button class="primary big" type="button" id="retry">Try again</button>`}
+    ${kind === "solo" && ok ? '<button class="link" type="button" id="edit">Change my answers (sends again)</button>' : ""}
+    <button class="big" type="button" id="new">Next player (clear this screen)</button></div>`);
+  if ($("retry")) $("retry").onclick = () => sendCode(code, kind);
+  if ($("edit")) $("edit").onclick = soloOffer;
+  $("new").onclick = () => { store.del("solo"); store.del("pair"); S = P = null; home(); };
 }
 function download(name, text, type) {
   const a = document.createElement("a");
@@ -361,16 +392,96 @@ function addRecords(recs) {
   store.set("data", DATA); return { added, replaced, found: recs.length };
 }
 
-let LTAB = "collect";
+let LTAB = SERVER ? "join" : "collect";
+const countText = () => { const nS = DATA.filter((d) => d.t === "S").length, nP = DATA.filter((d) => d.t === "P").length;
+  return `${nS} solo player${nS === 1 ? "" : "s"} and ${nP} pair${nP === 1 ? "" : "s"} ${SERVER ? "received" : "collected"}.`; };
 function lecturer(tab) {
+  if (SERVER && !PIN) return pinGate(tab);
   if (tab) LTAB = tab;
-  const nS = DATA.filter((d) => d.t === "S").length, nP = DATA.filter((d) => d.t === "P").length;
-  const tabs = [["collect", "Collect results"], ["results", "Class results"], ["match", "Match and pay"], ["data", "Data"]];
-  view(`<div class="tabs noprint">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" class="${LTAB === k ? "on" : ""}">${l}</button>`).join("")}</div>
-    <p class="muted">${nS} solo player${nS === 1 ? "" : "s"} and ${nP} pair${nP === 1 ? "" : "s"} collected.</p>
-    <div id="lt"></div>`, LTAB !== "collect");
+  const tabs = [...(SERVER ? [["join", "Students join"]] : []), ["collect", SERVER ? "Add codes by hand" : "Collect results"],
+    ["results", "Class results"], ["match", "Match and pay"], ["data", "Data"]];
+  view(`<div class="tabs noprint">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" class="${LTAB === k ? "on" : ""}">${l}</button>`).join("")}
+    <button type="button" id="present" class="primary">Present to class</button></div>
+    <p class="muted" id="lcount">${countText()}${SERVER ? ' <span class="pill">live</span>' : ""}</p>
+    <div id="lt"></div>`, LTAB !== "collect" && LTAB !== "join");
   document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { stopCam(); lecturer(b.dataset.tab); }));
-  ({ collect: lCollect, results: lResults, match: lMatch, data: lData })[LTAB]();
+  $("present").onclick = () => { stopCam(); present(); };
+  ({ join: lJoin, collect: lCollect, results: lResults, match: lMatch, data: lData })[LTAB]();
+  if (SERVER) startPoll();
+}
+function pinGate(tab) {
+  view(`<div class="card"><h2>Lecturer</h2><p class="sub">Enter the PIN shown in the server window on your laptop.</p>
+    <label for="pin">PIN</label><input type="text" id="pin" inputmode="numeric" maxlength="4" autocomplete="off">
+    <p class="err" id="perr"></p><button class="primary big" type="button" id="pgo">Open the lecturer page</button></div>`);
+  const go = async () => {
+    PIN = $("pin").value.trim();
+    try { await syncFromServer(); try { sessionStorage.setItem("eco414.pin", PIN); } catch (e) {} lecturer(tab); }
+    catch (e) { PIN = ""; $("perr").textContent = e.message === "pin" ? "Wrong PIN." : "Cannot reach the server."; }
+  };
+  $("pgo").onclick = go; $("pin").onkeydown = (e) => e.key === "Enter" && go(); $("pin").focus();
+}
+/* the server is the record of what was received; the lecturer page mirrors it */
+let LASTN = -1, POLL = null;
+async function syncFromServer() {
+  const r = await api("/api/results");
+  if (r.n === LASTN) return false;
+  LASTN = r.n; DATA = []; addRecords(parseCodes(r.codes.join("\n")));
+  return true;
+}
+function startPoll() {
+  if (POLL) return;
+  POLL = setInterval(async () => {
+    if (!$("lcount") && !$("pres")) { clearInterval(POLL); POLL = null; return; }
+    try {
+      if (!(await syncFromServer())) return;
+      if ($("pres")) return present();
+      $("lcount").innerHTML = countText() + ' <span class="pill">live</span>';
+      if (LTAB === "results" || LTAB === "data" || LTAB === "join") lecturer(LTAB);
+    } catch (e) { if ($("lcount")) $("lcount").innerHTML = countText() + ' <span class="pill">server not reachable</span>'; }
+  }, 3000);
+}
+async function lJoin() {
+  let info = { ips: [], port: location.port };
+  try { info = await api("/api/info"); } catch (e) {}
+  const urls = info.ips.map((ip) => `http://${ip}:${info.port}`);
+  $("lt").innerHTML = `<div class="card" style="text-align:center"><h2>Join the game</h2>
+    ${urls.length ? `<p class="sub">Connect to the same Wi-Fi or lab network, then scan or type:</p>
+      <div class="qr">${qrSvg(urls[0])}</div><div class="code" style="font-size:34px">${esc(urls[0].replace("http://", ""))}</div>
+      ${urls.length > 1 ? `<p class="muted">Other addresses of this laptop: ${urls.slice(1).map((u) => esc(u.replace("http://", ""))).join(", ")}</p>` : ""}`
+      : `<p class="err">This laptop is not connected to a network. Connect to Wi-Fi or turn on the mobile hotspot, then reopen this tab.</p>`}
+    <p class="sub" style="margin-top:14px">Stake: ${money(settings.stake)} in steps of ${settings.step}. <button class="link noprint" type="button" id="cset">Change</button></p>
+    <p class="muted">${countText()}</p></div>`;
+  $("cset").onclick = () => stakeSettings(() => lecturer("join"));
+}
+
+/* ---------- projector view: results only, no names ---------- */
+function present() {
+  const s = DATA.filter((d) => d.t === "S"), p = DATA.filter((d) => d.t === "P");
+  const offers = [...s, ...p].map((d) => pct(d.o, d.stake)), gifts = [...s, ...p].map((d) => pct(d.g, d.stake));
+  const mins = s.map((d) => pct(d.m, d.stake)), guesses = s.map((d) => pct(d.b, d.stake));
+  const rej = p.filter((d) => d.r === "R").length;
+  view(`<div id="pres" style="font-size:20px">
+    <div class="row noprint" style="justify-content:space-between"><h2 style="font-size:30px;margin:0">Class results</h2>
+      <div class="row"><span class="pill" style="font-size:16px">${offers.length} players</span>
+      <button type="button" id="fs">Full screen</button><button type="button" id="px">Back</button></div></div>
+    ${!offers.length ? `<div class="card" style="margin-top:16px"><p>Waiting for results…</p></div>` : `
+    <div class="stats" style="margin:16px 0">
+      <div class="stat"><div class="v" style="font-size:40px">${f0(mean(offers))}</div><div class="l" style="font-size:16px">Average Ultimatum offer</div></div>
+      <div class="stat"><div class="v" style="font-size:40px">${f0(mean(gifts))}</div><div class="l" style="font-size:16px">Average Dictator gift</div></div>
+      <div class="stat"><div class="v" style="font-size:40px">${f0((100 * gifts.filter((x) => x === 0).length) / gifts.length)}</div><div class="l" style="font-size:16px">Gave nothing as Dictator</div></div>
+      ${s.length ? `<div class="stat"><div class="v" style="font-size:40px">${f0(mean(mins))}</div><div class="l" style="font-size:16px">Average minimum acceptable offer</div></div>
+      <div class="stat"><div class="v" style="font-size:40px">${f0(mean(guesses))}</div><div class="l" style="font-size:16px">You guessed the average offer would be</div></div>` : ""}
+      ${p.length ? `<div class="stat"><div class="v" style="font-size:40px">${rej} of ${p.length}</div><div class="l" style="font-size:16px">Live offers rejected</div></div>` : ""}
+    </div>
+    <div class="card"><h3 style="margin-top:0">Ultimatum offers and Dictator gifts</h3>
+      <div class="legend" style="font-size:16px"><span><i style="background:var(--ug)"></i>Ultimatum offer</span><span><i style="background:var(--dg)"></i>Dictator gift</span></div>
+      <div class="chart" id="pc1"></div></div>
+    ${s.length ? `<div class="card"><h3 style="margin-top:0">Share who would accept each offer</h3><div class="chart" id="pc2"></div></div>` : ""}`}
+  </div>`, true);
+  if (offers.length) { barChart($("pc1"), shares(offers), shares(gifts), offers.length, gifts.length); if (s.length) acceptChart($("pc2"), mins); }
+  $("px").onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); lecturer(LTAB); };
+  $("fs").onclick = () => document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {});
+  if (SERVER) startPoll();
 }
 function lCollect() {
   $("lt").innerHTML = `<div class="card"><h2>Collect results</h2>
@@ -394,10 +505,10 @@ function lCollect() {
       res.added + res.replaced === 0 ? `Those codes were already collected. Total collected: ${DATA.length}.` :
       `${res.added} new, ${res.replaced} updated from ${src}. Total collected: ${DATA.length}.`;
   };
-  $("addBtn").onclick = () => { const recs = parseCodes($("paste").value); report(addRecords(recs), "the text"); if (recs.length) $("paste").value = ""; };
+  $("addBtn").onclick = () => { const recs = parseCodes($("paste").value); report(addRecords(recs), "the text"); push(recs); if (recs.length) $("paste").value = ""; };
   $("files").onchange = async (e) => {
     let txt = ""; for (const f of e.target.files) txt += (await f.text()) + "\n";
-    report(addRecords(parseCodes(txt)), e.target.files.length + " file(s)"); e.target.value = "";
+    const recs = parseCodes(txt); report(addRecords(recs), e.target.files.length + " file(s)"); push(recs); e.target.value = "";
   };
   $("camBtn").onclick = () => (CAM ? stopCam() : startCam(report));
   $("cset").onclick = () => stakeSettings(() => lecturer("collect"));
@@ -416,12 +527,16 @@ async function startCam(report) {
       c.width = v.videoWidth; c.height = v.videoHeight; ctx.drawImage(v, 0, 0);
       const q = jsQR(ctx.getImageData(0, 0, c.width, c.height).data, c.width, c.height, { inversionAttempts: "dontInvert" });
       if (q && q.data && q.data !== last) {
-        last = q.data; const res = addRecords(parseCodes(q.data));
+        last = q.data; const recs = parseCodes(q.data), res = addRecords(recs); push(recs);
         if (res.added + res.replaced) { beep(); report(res, "the camera"); }
       }
     }, 250) };
     $("camBtn").textContent = "Stop camera";
   } catch (e) { $("cmsg").textContent = "Camera not available (" + e.name + "). Use typed codes or files."; }
+}
+async function push(recs) {  // codes added by hand on the lecturer page also go to the server
+  if (!SERVER) return;
+  for (const r of recs) { try { await api("/api/submit", { code: codeOf(r) }); } catch (e) {} }
 }
 function stopCam() {
   if (!CAM) return; clearInterval(CAM.timer); CAM.stream.getTracks().forEach((t) => t.stop()); CAM = null;
@@ -557,7 +672,11 @@ function lData() {
   document.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { DATA.splice(+b.dataset.del, 1); store.set("data", DATA); lecturer("data"); }));
   $("csv").onclick = () => download(`eco414-games-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(), "text/csv");
   $("codes").onclick = () => download("eco414-codes.txt", DATA.map(codeOf).join("\n") + "\n", "text/plain");
-  $("clr").onclick = () => { if (confirm("Delete all collected results on this device? Download the CSV first if you need it.")) { DATA = []; MATCH = null; store.set("data", DATA); store.del("match"); lecturer("collect"); } };
+  $("clr").onclick = async () => {
+    if (!confirm(SERVER ? "Start a new session? The server keeps the old results in its results folder." : "Delete all collected results on this device? Download the CSV first if you need it.")) return;
+    if (SERVER) { try { await api("/api/clear", {}); } catch (e) { alert("Could not reach the server."); return; } LASTN = -1; }
+    DATA = []; MATCH = null; store.set("data", DATA); store.del("match"); lecturer(SERVER ? "join" : "collect");
+  };
 }
 const codeOf = (d) => (d.t === "S" ? soloCode(d) : pairCode(d));
 function toCsv() {
@@ -572,8 +691,14 @@ function toCsv() {
 
 /* ---------- routing ---------- */
 $("homeBtn").onclick = () => { stopCam(); home(); };
-$("lectLink").onclick = () => lecturer("collect");
-if (location.hash === "#lecturer") lecturer("collect"); else home();
+$("lectLink").onclick = () => lecturer();
+const atLecturer = location.hash === "#lecturer" || (SERVER && location.pathname.replace(/\/$/, "") === "/lecturer");
+if (SERVER) {
+  if (!atLecturer) { $("lectLink").remove(); document.querySelector("footer").textContent = "Your results go straight to your lecturer."; $("homeBtn").remove(); }
+  if (atLecturer) DATA = [];  // the server is the record; never mix in this browser's old local data
+  fetch("/api/settings").then((r) => r.json()).then((x) => { Object.assign(settings, x); if (!atLecturer && !S && !P) home(); }).catch(() => {});
+}
+if (atLecturer) lecturer(); else home();
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>

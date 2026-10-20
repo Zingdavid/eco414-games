@@ -26,7 +26,22 @@ Apps > Install this site as an app). It then opens from the Start menu and works
 
 Phones: open the same link and choose **Add to Home screen** / **Install app**.
 
-## Running a class
+## Live results on the lecturer's laptop (local network, no internet)
+
+1. Double-click `run_games_server.bat` on the lecturer's laptop. A window shows the **student address** (for example
+   `http://192.168.1.23:8080`) and a **4-digit PIN**; the lecturer page opens by itself (`http://localhost:8080/lecturer`).
+   The first time, Windows asks whether Python may use the network: tick **Private networks** and click **Allow**.
+2. Enter the PIN. The **Students join** tab shows a big QR code and the address: put it on the projector.
+3. Students on the same lab network or Wi-Fi (or the laptop's mobile hotspot) open that address in any browser;
+   nothing needs to be installed on their computers. Results are sent to the laptop as soon as each student finishes.
+4. Students never see the results. The lecturer page updates every 3 seconds; **Present to class** shows the results
+   full-screen for the projector, without names.
+5. The stake set on the lecturer page applies to every student. Results are also saved in `results\` (one file per
+   session), so nothing is lost if the window is closed by mistake; **Data > Clear** starts a new session.
+
+If the lab network blocks connections between computers, use the methods below (scan, files or paste) instead.
+
+## Running a class (without the server)
 
 1. Tell students the stake if it is not the default MWK 1,000 (students can change it under *change*).
 2. Students choose **Play on my own**, enter a nickname or student number and make their decisions.
