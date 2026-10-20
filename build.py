@@ -10,7 +10,7 @@ import pathlib
 
 from PIL import Image, ImageDraw, ImageFont
 
-CACHE = "eco414-games-v3"
+CACHE = "eco414-games-v4"
 ROOT = pathlib.Path(__file__).parent
 DOCS = ROOT / "docs"
 (DOCS / "icons").mkdir(parents=True, exist_ok=True)

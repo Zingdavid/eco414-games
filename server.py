@@ -1,8 +1,8 @@
 """ECO 414 games: lecturer server for a local network (no internet needed).
 
 Run on the lecturer's laptop (run_games_server.bat). Students on the same Wi-Fi or lab network open the address it
-prints; every result is sent here as soon as they finish. Results are only shown on the lecturer page (PIN).
-Standard library only.
+prints; results are sent here as soon as they finish. Only the lecturer page (PIN) can read them.
+It speaks the same API as backend/Code.gs (the Google Sheet), so the app works with either. Standard library only.
 """
 import datetime
 import json
@@ -12,6 +12,7 @@ import re
 import socket
 import sys
 import threading
+import urllib.parse
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -48,29 +49,51 @@ def get_pin():
 
 
 PIN = get_pin()
-CODE_RE = re.compile(r"^(S-[A-Z0-9]{1,10}-\d+-\d+-\d+-\d+-\d+|P-[A-Z0-9]{1,10}-[A-Z0-9]{1,10}-\d+-[AR]-\d+-\d+)$")
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript", ".webmanifest": "application/manifest+json",
          ".png": "image/png", ".json": "application/json"}
 
+STORE = DATA_DIR / "data.json"
 lock = threading.Lock()
-settings = {"stake": 1000, "step": 50, "cur": "MWK"}
-session_file = DATA_DIR / f"session-{datetime.datetime.now():%Y-%m-%d}.jsonl"
-codes = []  # list of dicts {t, ip, code}, in arrival order
-if session_file.exists():  # resume today's session after a restart
-    for line in session_file.read_text(encoding="utf-8").splitlines():
-        try:
-            codes.append(json.loads(line))
-        except ValueError:
-            pass
+db = {"sessions": [], "responses": [], "outcomes": []}
+if STORE.exists():
+    try:
+        db.update(json.loads(STORE.read_text(encoding="utf-8")))
+    except ValueError:  # keep a damaged file aside rather than overwrite it
+        STORE.rename(STORE.with_name(f"data.broken-{datetime.datetime.now():%Y%m%d%H%M%S}.json"))
+
+
+def save():
+    tmp = STORE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(db, indent=1), encoding="utf-8")
+    tmp.replace(STORE)
+
+
+def now():
+    return datetime.datetime.now().isoformat(timespec="seconds")
+
+
+def txt(v, n):
+    return str("" if v is None else v)[:n]
+
+
+def num(v):
+    try:
+        return max(0, round(float(v)))
+    except (TypeError, ValueError):
+        return ""
+
+
+def code(v):
+    return re.sub(r"[^A-Z0-9]", "", str(v or "").upper())[:8]
 
 
 def lan_ips():
     ips = set()
     try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("10.255.255.255", 1))  # no packet is sent; just picks the main interface
-        ips.add(s.getsockname()[0])
-        s.close()
+        sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sk.connect(("10.255.255.255", 1))  # no packet is sent; just picks the main interface
+        ips.add(sk.getsockname()[0])
+        sk.close()
     except OSError:
         pass
     try:
@@ -83,6 +106,76 @@ def lan_ips():
 def page():
     html = (DOCS / "index.html").read_text(encoding="utf-8")
     return html.replace("<!--SERVER-->", "<script>window.ECO_SERVER = true;</script>")
+
+
+def api_get(p):
+    a = p.get("action")
+    if a == "ping":
+        return {"ok": True}
+    if a == "info":
+        return {"ok": True, "ips": lan_ips(), "port": PORT}
+    if a == "session":
+        ss = [x for x in db["sessions"] if x["code"] == code(p.get("code"))]
+        return {"ok": True, "session": ss[-1]} if ss else {"ok": False, "error": "no such session"}
+    if a == "outcome":  # a student reads only their own result: uid and device token must match
+        if not p.get("token") or not any(r["uid"] == p.get("uid") and r["token"] == p.get("token") for r in db["responses"]):
+            return {"ok": False, "error": "not found"}
+        oc = [o for o in db["outcomes"] if o["uid"] == p.get("uid")]
+        return {"ok": True, "outcome": oc[-1] if oc else None}
+    if p.get("key") != PIN:
+        return {"ok": False, "error": "key"}
+    if a == "check":
+        return {"ok": True}
+    if a == "results":
+        return {"ok": True, "sessions": db["sessions"],
+                "responses": [{k: v for k, v in r.items() if k != "token"} for r in db["responses"]]}
+    return {"ok": False, "error": "unknown action"}
+
+
+OUTCOME_FIELDS = ["uid", "name", "offer_made", "offer_made_result", "offer_received", "offer_received_result",
+                  "ug_earnings", "dg_given", "dg_received", "dg_earnings", "total"]
+
+
+def api_post(b):
+    a = b.get("action")
+    if a == "submit":
+        seen = {r["uid"] for r in db["responses"]}
+        done, added = [], 0
+        for x in (b.get("items") or [])[:50]:
+            if not isinstance(x, dict) or not x.get("uid"):
+                continue
+            uid = txt(x["uid"], 40)
+            if uid not in seen:
+                db["responses"].append({
+                    "received": now(), "uid": uid, "session": code(x.get("session")), "mode": "P" if x.get("mode") == "P" else "S",
+                    "name": txt(x.get("name"), 40), "student_no": txt(x.get("sno"), 20), "partner": txt(x.get("partner"), 40),
+                    "stake": num(x.get("stake")), "ug_offer": num(x.get("o")), "ug_min_accept": num(x.get("m")),
+                    "ug_response": {"A": "accept", "R": "reject"}.get(x.get("r"), ""), "dg_gift": num(x.get("g")),
+                    "guess_avg_offer": num(x.get("b")), "client_time": txt(x.get("t"), 30), "token": txt(x.get("token"), 40)})
+                seen.add(uid)
+                added += 1
+            done.append(uid)
+        if added:
+            save()
+            print(f"  received {added} result(s)   ({len(db['responses'])} in total)")
+        return {"ok": True, "done": done}
+    if b.get("key") != PIN:
+        return {"ok": False, "error": "key"}
+    if a == "createSession":
+        c = code(b.get("code"))
+        if not any(x["code"] == c for x in db["sessions"]):
+            db["sessions"].append({"created": now(), "code": c, "stake": num(b.get("stake")), "step": num(b.get("step")),
+                                   "currency": txt(b.get("cur"), 6), "title": txt(b.get("title"), 60)})
+            save()
+        return {"ok": True}
+    if a == "saveOutcomes":
+        c = code(b.get("session"))
+        rows = [r for r in (b.get("rows") or []) if isinstance(r, dict)]
+        db["outcomes"] = [o for o in db["outcomes"] if o["session"] != c] + [
+            {"paired_at": now(), "session": c, **{k: r.get(k) for k in OUTCOME_FIELDS}} for r in rows]
+        save()
+        return {"ok": True, "saved": len(rows)}
+    return {"ok": False, "error": "unknown action"}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -100,67 +193,30 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    def authed(self):
-        return self.headers.get("X-Pin", "") == PIN
-
-    def body(self):
-        n = min(int(self.headers.get("Content-Length") or 0), 20000)
-        try:
-            return json.loads(self.rfile.read(n) or b"{}")
-        except ValueError:
-            return {}
-
     def do_GET(self):
-        path = self.path.split("?")[0]
+        path, _, query = self.path.partition("?")
         if path in ("/", "/index.html", "/lecturer"):
             return self.send(200, page(), TYPES[".html"])
-        if path == "/api/settings":
-            return self.send(200, settings)
-        if path == "/api/info":
-            return self.send(200, {"ips": lan_ips(), "port": PORT})
-        if path == "/api/results":
-            if not self.authed():
-                return self.send(403, {"error": "PIN required"})
+        if path == "/api":
+            p = {k: v[0] for k, v in urllib.parse.parse_qs(query).items()}
             with lock:
-                return self.send(200, {"codes": [c["code"] for c in codes], "n": len(codes)})
+                return self.send(200, api_get(p))
         f = (DOCS / path.lstrip("/")).resolve()
         if f.is_file() and DOCS in f.parents and f.name != "sw.js":
             return self.send(200, f.read_bytes(), TYPES.get(f.suffix, "application/octet-stream"))
-        self.send(404, {"error": "not found"})
+        self.send(404, {"ok": False, "error": "not found"})
 
     def do_POST(self):
-        global session_file
-        path = self.path.split("?")[0]
-        b = self.body()
-        if path == "/api/submit":
-            code = str(b.get("code", "")).strip().upper()
-            if not CODE_RE.match(code):
-                return self.send(400, {"ok": False, "error": "invalid code"})
-            rec = {"t": datetime.datetime.now().isoformat(timespec="seconds"), "ip": self.client_address[0], "code": code}
-            with lock:
-                codes.append(rec)
-                with session_file.open("a", encoding="utf-8") as fh:
-                    fh.write(json.dumps(rec) + "\n")
-                n = len(codes)
-            print(f"  received {code}   ({n} so far)")
-            return self.send(200, {"ok": True})
-        if not self.authed():
-            return self.send(403, {"error": "PIN required"})
-        if path == "/api/settings":
-            try:
-                stake, step = int(b["stake"]), int(b["step"])
-                assert stake >= 10 and step >= 1 and stake % step == 0
-            except (KeyError, ValueError, AssertionError):
-                return self.send(400, {"error": "bad settings"})
-            settings.update(stake=stake, step=step, cur=str(b.get("cur") or "MWK")[:6])
-            return self.send(200, settings)
-        if path == "/api/clear":
-            with lock:
-                codes.clear()
-                if session_file.exists():  # keep the old file; start a fresh one
-                    session_file = DATA_DIR / f"session-{datetime.datetime.now():%Y-%m-%d_%H%M%S}.jsonl"
-            return self.send(200, {"ok": True})
-        self.send(404, {"error": "not found"})
+        if self.path.partition("?")[0] != "/api":
+            return self.send(404, {"ok": False, "error": "not found"})
+        n = min(int(self.headers.get("Content-Length") or 0), 200000)
+        try:
+            b = json.loads(self.rfile.read(n) or b"{}")
+            assert isinstance(b, dict)
+        except (ValueError, AssertionError):
+            return self.send(200, {"ok": False, "error": "bad request"})
+        with lock:
+            return self.send(200, api_post(b))
 
 
 def main():
@@ -179,9 +235,9 @@ def main():
         print(f"     http://{ip}:{PORT}")
     print(f"\n Lecturer page (this laptop):  http://localhost:{PORT}/lecturer")
     print(f" Lecturer PIN:                 {PIN}" + ("   (to change it, delete pin.txt)" if PIN_FILE.exists() else ""))
-    print(f"\n Results are saved in: {DATA_DIR}")
-    if codes:
-        print(f" Resumed today's session: {len(codes)} results already received.")
+    print(f"\n Results are saved in: {STORE}")
+    if db["responses"]:
+        print(f" {len(db['responses'])} results from earlier sessions are kept.")
     print(" Close this window to stop the server.\n")
     threading.Timer(1.0, lambda: webbrowser.open(f"http://localhost:{PORT}/lecturer")).start()
     try:

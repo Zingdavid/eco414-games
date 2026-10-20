@@ -4,102 +4,129 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ECO 414 Classroom Games</title>
-<meta name="description" content="Ultimatum and Dictator games for the classroom. Works offline.">
+<meta name="description" content="Ultimatum and Dictator games for the classroom. Works offline and syncs later.">
 <meta name="theme-color" content="#2563eb">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 :root {
-  --bg: #f6f6f4; --surface: #fcfcfb; --card: #ffffff; --ink: #1c1c1a; --ink2: #55554f; --muted: #8a8a83;
-  --line: #e2e2dc; --accent: #2563eb; --accent-ink: #ffffff; --ug: #2563eb; --dg: #d97706;
-  --ok: #15803d; --bad: #b91c1c; --soft: #eef2fb;
+  --bg: #f4f5f7; --surface: #fbfbfc; --card: #ffffff; --ink: #18181b; --ink2: #52525b; --muted: #8b8b93;
+  --line: #e4e4e7; --accent: #2563eb; --accent-ink: #ffffff; --accent-soft: #eaf0fd; --ug: #2563eb; --dg: #d97706;
+  --ok: #15803d; --ok-soft: #e8f6ec; --warn: #b45309; --warn-soft: #fdf3e3; --bad: #b91c1c; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 2px 8px rgba(0,0,0,.04);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #121211; --surface: #1a1a19; --card: #20201e; --ink: #ecece8; --ink2: #b9b9b2; --muted: #8b8b84;
-    --line: #34342f; --accent: #3b82f6; --accent-ink: #ffffff; --ug: #3b82f6; --dg: #d97706;
-    --ok: #4ade80; --bad: #f87171; --soft: #1d2433;
+    --bg: #111113; --surface: #1a1a1d; --card: #1f1f23; --ink: #ececef; --ink2: #b4b4bb; --muted: #85858d;
+    --line: #2f2f35; --accent: #3b82f6; --accent-ink: #ffffff; --accent-soft: #1b2638; --ug: #3b82f6; --dg: #d97706;
+    --ok: #4ade80; --ok-soft: #14271b; --warn: #fbbf24; --warn-soft: #2b2312; --bad: #f87171; --shadow: none;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #121211; --surface: #1a1a19; --card: #20201e; --ink: #ecece8; --ink2: #b9b9b2; --muted: #8b8b84;
-  --line: #34342f; --accent: #3b82f6; --accent-ink: #ffffff; --ug: #3b82f6; --dg: #d97706;
-  --ok: #4ade80; --bad: #f87171; --soft: #1d2433;
+  --bg: #111113; --surface: #1a1a1d; --card: #1f1f23; --ink: #ececef; --ink2: #b4b4bb; --muted: #85858d;
+  --line: #2f2f35; --accent: #3b82f6; --accent-ink: #ffffff; --accent-soft: #1b2638; --ug: #3b82f6; --dg: #d97706;
+  --ok: #4ade80; --ok-soft: #14271b; --warn: #fbbf24; --warn-soft: #2b2312; --bad: #f87171; --shadow: none;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
-header { background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
-header h1 { font-size: 17px; margin: 0; flex: 1; }
-header button { font-size: 14px; }
-main { max-width: 760px; margin: 0 auto; padding: 16px; }
+header { background: var(--card); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 4; }
+header .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; }
+header .logo { width: 30px; height: 30px; flex: none; }
+header h1 { font-size: 16px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.net { font-size: 13px; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.net.on { background: var(--ok-soft); color: var(--ok); }
+.net.off { background: var(--warn-soft); color: var(--warn); }
+main { max-width: 680px; margin: 0 auto; padding: 16px; }
 main.wide { max-width: 1100px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-h2 { font-size: 22px; margin: 0 0 8px; }
-h3 { font-size: 17px; margin: 18px 0 6px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 14px; box-shadow: var(--shadow); }
+h2 { font-size: 22px; margin: 0 0 6px; line-height: 1.25; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
 p { margin: 8px 0; }
-.muted { color: var(--muted); }
-.sub { color: var(--ink2); }
+.muted { color: var(--muted); } .sub { color: var(--ink2); } .small { font-size: 14px; }
 button, .btn { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 10px 16px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
-button.big { font-size: 18px; padding: 14px 22px; width: 100%; margin-top: 10px; }
+button.big { font-size: 18px; padding: 14px 20px; width: 100%; margin-top: 12px; }
 button.link { border: none; background: none; color: var(--accent); padding: 4px; text-decoration: underline; }
 button:disabled { opacity: .5; cursor: default; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
-.choice { text-align: left; padding: 16px; border-radius: 12px; }
-.choice b { display: block; font-size: 17px; margin-bottom: 4px; }
-.choice span { color: var(--ink2); font-size: 14px; }
-label { display: block; font-weight: 600; margin: 12px 0 4px; }
-input[type=text], input[type=number], select, textarea { font: inherit; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.tile { display: flex; gap: 14px; align-items: flex-start; text-align: left; padding: 16px; border-radius: 14px; width: 100%; margin-top: 10px; background: var(--card); box-shadow: var(--shadow); }
+.tile .ic { font-size: 28px; line-height: 1; flex: none; }
+.tile b { display: block; font-size: 17px; }
+.tile span { color: var(--ink2); font-size: 14px; }
+.tile.hero { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tile.hero span { color: var(--accent-ink); opacity: .9; }
+label { display: block; font-weight: 600; margin: 14px 0 4px; }
+input[type=text], input[type=number], input[type=password], input[type=url], select, textarea { font: inherit; width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
 textarea { min-height: 110px; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
-.amount { font-size: 40px; font-weight: 700; text-align: center; margin: 8px 0 0; font-variant-numeric: tabular-nums; }
-.split { display: flex; justify-content: space-between; color: var(--ink2); font-size: 15px; margin-top: 4px; }
+.hint { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.progress { display: flex; gap: 6px; margin-bottom: 14px; }
+.progress i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
+.progress i.on { background: var(--accent); }
+.tag { display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 999px; margin-bottom: 8px; }
+.amount { font-size: 42px; font-weight: 700; text-align: center; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+.split { display: flex; justify-content: space-between; color: var(--ink2); font-size: 15px; margin-top: 2px; gap: 8px; }
+.splitbar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 8px 0 2px; background: var(--line); }
+.splitbar .k { background: var(--muted); opacity: .45; } .splitbar .g { background: var(--accent); }
 input[type=range] { width: 100%; height: 36px; accent-color: var(--accent); }
-.stepper { display: flex; gap: 8px; justify-content: center; margin-top: 6px; }
-.stepper button { min-width: 64px; }
-.code { font: 700 26px/1.3 ui-monospace, Consolas, monospace; letter-spacing: 1px; text-align: center; background: var(--soft); border-radius: 10px; padding: 14px; word-break: break-all; user-select: all; }
+.stepper { display: flex; gap: 8px; justify-content: center; }
+.stepper button { min-width: 72px; }
+.review { width: 100%; border-collapse: collapse; }
+.review td { padding: 10px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.review td.v { text-align: right; font-weight: 700; white-space: nowrap; }
+.status { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 12px; margin: 10px 0; font-size: 15px; }
+.status.ok { background: var(--ok-soft); color: var(--ok); } .status.wait { background: var(--warn-soft); color: var(--warn); }
+.code { font: 700 22px/1.3 ui-monospace, Consolas, monospace; text-align: center; background: var(--accent-soft); border-radius: 10px; padding: 12px; word-break: break-all; user-select: all; }
+.code.huge { font-size: 54px; letter-spacing: 6px; }
 .qr { display: flex; justify-content: center; margin: 14px 0; }
-.qr svg, .qr img { width: 220px; height: 220px; background: #fff; padding: 8px; border-radius: 8px; }
-.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--soft); font-size: 13px; color: var(--ink2); }
-.result { font-size: 20px; font-weight: 700; }
-.result.ok { color: var(--ok); } .result.bad { color: var(--bad); }
-.handoff { text-align: center; padding: 40px 20px; }
-.handoff .big-emoji { font-size: 56px; }
+.qr svg { width: 220px; height: 220px; background: #fff; padding: 8px; border-radius: 10px; }
+.qr.big svg { width: min(340px, 80vw); height: min(340px, 80vw); }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); font-size: 13px; color: var(--ink2); }
+.handoff { text-align: center; padding: 34px 20px; }
+.emoji { font-size: 52px; line-height: 1.2; }
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
-th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; font-variant-numeric: tabular-nums; }
 th { color: var(--ink2); font-weight: 600; }
 td.num, th.num { text-align: right; }
-.tablewrap { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+.tablewrap { overflow-x: auto; max-height: 460px; overflow-y: auto; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-.stat .v { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.stat .v { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .stat .l { font-size: 13px; color: var(--ink2); }
-.legend { display: flex; gap: 16px; font-size: 14px; color: var(--ink2); margin: 6px 0; }
+.legend { display: flex; gap: 16px; font-size: 14px; color: var(--ink2); margin: 6px 0; flex-wrap: wrap; }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-.chart { width: 100%; position: relative; }
 .chart svg { width: 100%; height: auto; display: block; }
 .chart text { fill: var(--ink2); font-size: 12px; }
 .chart .axis { stroke: var(--line); }
-.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; display: none; z-index: 5; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; display: none; z-index: 9; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.tabs button { padding: 8px 14px; }
 .tabs button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-video { width: 100%; max-width: 420px; border-radius: 10px; background: #000; }
-.notice { background: var(--soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.bar select { width: auto; min-width: 220px; }
+video { width: 100%; max-width: 420px; border-radius: 10px; background: #000; display: block; margin: 0 auto; }
+.notice { background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
 .err { color: var(--bad); font-size: 14px; }
-footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 16px 30px; }
-@media print { header, footer, .noprint { display: none; } body { background: #fff; } .card { border: none; } }
+.list .item { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.list .item:last-child { border-bottom: 0; }
+footer { text-align: center; color: var(--muted); font-size: 13px; padding: 18px 16px 30px; }
+@media print { header, footer, .noprint { display: none !important; } body { background: #fff; } .card { border: none; box-shadow: none; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>ECO 414 Classroom Games</h1>
-  <button id="homeBtn" class="noprint" type="button">Home</button>
+  <button class="brand" type="button" id="homeBtn" aria-label="Home">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="#2563eb"/><path d="M16 4 A12 12 0 1 1 8.9 25.7 L16 16Z" fill="#fff"/><path d="M8.9 25.7 A12 12 0 0 1 16 4 L16 16Z" fill="#d97706"/></svg>
+    <h1>ECO 414 Classroom Games</h1>
+  </button>
+  <span class="net" id="net"></span>
 </header>
 <main id="app"></main>
-<footer class="noprint">Works without internet once loaded. <button class="link" type="button" id="lectLink">Lecturer</button></footer>
+<footer class="noprint"><span id="foot">Works offline. Results are sent when you are online.</span> · <button class="link" type="button" id="lectLink">Lecturer</button></footer>
 <div class="tip" id="tip"></div>
 
 <!--SERVER-->
@@ -107,510 +134,607 @@ footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px
 <!--VENDOR_JSQR-->
 <script>
 "use strict";
-/* ---------- storage (never required: the app works without it) ---------- */
+/* =====================================================================
+   Configuration. DEFAULT_BACKEND is the Google Apps Script web app URL
+   (see backend/Code.gs). Join links also carry it, so it can stay empty.
+   ===================================================================== */
+const DEFAULT_BACKEND = "";
+const PUBLIC_URL = "https://zingdavid.github.io/eco414-games/";
+const SERVER = !!window.ECO_SERVER;           // page served by the lecturer's laptop (server.py)
+let SERVER_BASE = "";                          // the laptop's network address, for the join QR code
+
+/* ---------- small helpers ---------- */
 const store = {
   get(k, d) { try { const v = localStorage.getItem("eco414." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem("eco414." + k, JSON.stringify(v)); } catch (e) {} },
   del(k) { try { localStorage.removeItem("eco414." + k); } catch (e) {} }
 };
-const settings = Object.assign({ stake: 1000, step: 50, cur: "MWK" }, store.get("settings", {}));
-/* SERVER: page was loaded from the lecturer's laptop, so results are sent there and only the lecturer sees them */
-const SERVER = !!window.ECO_SERVER;
-let PIN = ""; try { PIN = sessionStorage.getItem("eco414.pin") || ""; } catch (e) {}
-async function api(path, body) {
-  const opt = body === undefined ? { headers: { "X-Pin": PIN } } :
-    { method: "POST", headers: { "Content-Type": "application/json", "X-Pin": PIN }, body: JSON.stringify(body) };
-  const r = await fetch(path, opt);
-  if (!r.ok) throw new Error(r.status === 403 ? "pin" : "http " + r.status);
-  return r.json();
-}
 const app = document.getElementById("app");
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const money = (x) => settings.cur + " " + Number(x).toLocaleString();
-const nick = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
-const randId = () => { const a = "ABCDEFGHJKLMNPQRSTUVWXYZ"; let s = ""; for (let i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; };
-function view(html, wide) { app.className = wide ? "wide" : ""; app.innerHTML = html; window.scrollTo(0, 0); }
 const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const nick = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+const scode = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+const rand = (n, a = "ABCDEFGHJKMNPQRSTUVWXYZ23456789") => { let s = ""; const r = crypto.getRandomValues(new Uint32Array(n)); for (const x of r) s += a[x % a.length]; return s; };
+const money = (x, cur) => (cur || "MWK") + " " + Math.round(Number(x)).toLocaleString();
+function view(html, wide) { stopCam(); app.className = wide ? "wide" : ""; app.innerHTML = html; window.scrollTo(0, 0); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/* ---------- amount picker ---------- */
-function picker(id, start) {
-  const s = settings.stake, st = settings.step;
-  return `<div class="amount" id="${id}_v"></div>
-  <div class="split"><span id="${id}_keep"></span><span id="${id}_give"></span></div>
-  <input type="range" id="${id}" min="0" max="${s}" step="${st}" value="${start}" aria-label="Amount">
-  <div class="stepper"><button type="button" data-d="-1" data-for="${id}">− ${st}</button><button type="button" data-d="1" data-for="${id}">+ ${st}</button></div>`;
+/* ---------- device identity (lets a student fetch only their own result) ---------- */
+let TOKEN = store.get("token", "");
+if (!TOKEN) { TOKEN = rand(16); store.set("token", TOKEN); }
+let PROFILE = store.get("profile", { name: "", sno: "" });
+
+/* ---------- backend: Google Apps Script or the lecturer's laptop, same API ---------- */
+const backend = () => (SERVER ? "/api" : store.get("backend", "") || DEFAULT_BACKEND);
+async function bGet(params) {
+  const u = new URL(backend(), location.href);
+  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+  const r = await fetch(u.toString(), { cache: "no-store", redirect: "follow" });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || "error");
+  return j;
 }
-function wirePicker(id, keepLabel, giveLabel) {
-  const r = $(id);
-  const upd = () => {
-    const v = +r.value;
-    $(id + "_v").textContent = money(v);
-    if (keepLabel) { $(id + "_keep").textContent = keepLabel + ": " + money(settings.stake - v); $(id + "_give").textContent = giveLabel + ": " + money(v); }
-  };
-  r.addEventListener("input", upd);
-  document.querySelectorAll(`[data-for="${id}"]`).forEach((b) => b.addEventListener("click", () => {
-    r.value = Math.min(settings.stake, Math.max(0, +r.value + (+b.dataset.d) * settings.step)); upd();
-  }));
-  upd();
+async function bPost(body) {
+  const r = await fetch(backend(), { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body), redirect: "follow" });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || "error");
+  return j;
 }
+
+/* ---------- outbox: results wait here until they can be sent ---------- */
+const outbox = () => store.get("outbox", []);
+function queue(items) { const o = outbox(); const have = new Set(o.map((x) => x.uid)); items.forEach((x) => { if (!have.has(x.uid)) o.push(x); }); store.set("outbox", o); updateNet(); }
+let flushing = false;
+async function flush() {
+  if (flushing || !backend()) return false;
+  flushing = true;
+  try {
+    while (outbox().length) {
+      const batch = outbox().slice(0, 25);
+      const res = await bPost({ action: "submit", items: batch });
+      const done = new Set(res.done || []);
+      store.set("outbox", outbox().filter((x) => !done.has(x.uid)));
+      const mine = store.get("mine", []); mine.forEach((m) => { if (done.has(m.uid)) m.sent = true; }); store.set("mine", mine);
+      if (!done.size) break;
+    }
+    return true;
+  } catch (e) { return false; }
+  finally { flushing = false; updateNet(); }
+}
+function updateNet() {
+  const n = outbox().length, on = navigator.onLine;
+  const el = $("net");
+  el.className = "net " + (on ? "on" : "off");
+  el.textContent = (on ? "Online" : "Offline") + (n ? ` · ${n} to send` : "");
+  el.title = n ? `${n} result(s) saved on this device, waiting to be sent` : "";
+}
+window.addEventListener("online", () => { updateNet(); flush(); });
+window.addEventListener("offline", updateNet);
+setInterval(() => { if (outbox().length && navigator.onLine) flush(); }, 20000);
+
+/* ---------- session the student has joined ---------- */
+let SESSION = store.get("session", null);   // {code, stake, step, cur, title}
+function joinFromParams() {
+  const q = new URLSearchParams(location.search);
+  if (!q.get("join")) return false;
+  const code = scode(q.get("join")), stake = +q.get("k") || 1000, step = +q.get("t") || 50;
+  if (q.get("b") && !SERVER) store.set("backend", q.get("b"));
+  SESSION = { code, stake, step, cur: (q.get("c") || "MWK").slice(0, 6), title: (q.get("n") || "").slice(0, 60) };
+  store.set("session", SESSION);
+  history.replaceState(null, "", location.pathname);
+  return true;
+}
+const joinUrl = (s) => {
+  const base = SERVER ? SERVER_BASE || location.origin + "/" : PUBLIC_URL;
+  const p = new URLSearchParams({ join: s.code, k: s.stake, t: s.step, c: s.cur });
+  if (s.title) p.set("n", s.title);
+  if (!SERVER && backend() && backend() !== DEFAULT_BACKEND) p.set("b", backend());
+  return base + "?" + p.toString();
+};
 
 /* ---------- QR ---------- */
-function qrSvg(text) {
-  try { const q = qrcode(0, "M"); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); }
-  catch (e) { return ""; }
-}
+function qrSvg(text) { try { const q = qrcode(0, "L"); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch (e) { return ""; } }
 
-/* ---------- home ---------- */
+/* =====================================================================
+   STUDENT SCREENS
+   ===================================================================== */
 function home() {
-  view(`<div class="card">
-    <h2>Welcome</h2>
-    <p class="sub">Two classic games about fairness and self-interest. Your lecturer will tell you which one to play.</p>
-    <div class="grid2" style="margin-top:14px">
-      <button class="choice" type="button" id="goSolo"><b>Play on my own</b><span>Make all your decisions now. You are matched with a random classmate later.</span></button>
-      <button class="choice" type="button" id="goPair"><b>Play with a partner</b><span>Two players share this screen and play live.</span></button>
-    </div>
-    <p class="muted" style="margin-top:14px">Stake: ${money(settings.stake)} ${SERVER ? "" : '<button class="link" type="button" id="chgStake">change</button>'}</p>
-  </div>`);
-  $("goSolo").onclick = soloStart; $("goPair").onclick = pairStart;
-  if ($("chgStake")) $("chgStake").onclick = stakeSettings;
+  const mine = store.get("mine", []);
+  view(`
+    ${SESSION ? `<div class="card"><span class="tag">Session ${esc(SESSION.code)}</span>
+      <h2>${esc(SESSION.title || "Ultimatum and Dictator games")}</h2>
+      <p class="sub">You will decide how to share ${money(SESSION.stake, SESSION.cur)} with a classmate. Takes about 3 minutes.</p>
+      <button class="tile hero" type="button" id="play"><span class="ic">▶</span><div><b>Start playing</b><span>Three short decisions, then you are paired at random</span></div></button>
+      <button class="link small" type="button" id="leave">Not your session? Join a different one</button></div>`
+    : `<div class="card"><h2>Welcome</h2><p class="sub">Join your lecturer's session to start. Scan the QR code on the projector with your camera, or enter the session code.</p>
+      <button class="tile hero" type="button" id="join"><span class="ic">＋</span><div><b>Join a session</b><span>Scan the QR code or type the code</span></div></button></div>`}
+    <button class="tile" type="button" id="results"><span class="ic">📊</span><div><b>My results</b><span>${mine.length ? `${mine.length} game${mine.length === 1 ? "" : "s"} played. See your partner's choices and your earnings.` : "Your earnings appear here after your lecturer pairs the class."}</span></div></button>
+    <button class="tile" type="button" id="pair"><span class="ic">👥</span><div><b>Play with a partner on this device</b><span>Two players share one screen and see a real offer</span></div></button>
+    <button class="tile" type="button" id="install" hidden><span class="ic">⬇</span><div><b>Install the app</b><span>Open it from your home screen, even without internet</span></div></button>`);
+  if ($("play")) $("play").onclick = () => profile(soloStart);
+  if ($("leave")) $("leave").onclick = joinScreen;
+  if ($("join")) $("join").onclick = joinScreen;
+  $("results").onclick = myResults;
+  $("pair").onclick = pairStart;
+  if (INSTALL && !SERVER) { $("install").hidden = false; $("install").onclick = async () => { INSTALL.prompt(); await INSTALL.userChoice; INSTALL = null; home(); }; }
 }
-function stakeSettings(back) {
-  view(`<div class="card"><h2>Game settings</h2><p class="sub">Use the values your lecturer gives you.</p>
-    <label for="sStake">Amount to divide</label><input type="number" id="sStake" min="10" step="10" value="${settings.stake}">
-    <label for="sStep">Offers move in steps of</label><input type="number" id="sStep" min="1" value="${settings.step}">
-    <label for="sCur">Currency</label><input type="text" id="sCur" maxlength="6" value="${esc(settings.cur)}">
-    <p class="err" id="sErr"></p>
-    <button class="primary big" type="button" id="sSave">Save</button></div>`);
-  $("sSave").onclick = () => {
-    const stake = Math.round(+$("sStake").value), step = Math.round(+$("sStep").value);
-    if (!(stake >= 10) || !(step >= 1) || stake % step) { $("sErr").textContent = "The amount must be a multiple of the step."; return; }
-    settings.stake = stake; settings.step = step; settings.cur = ($("sCur").value || "MWK").trim().slice(0, 6);
-    store.set("settings", settings);
-    if (SERVER) api("/api/settings", settings).catch(() => alert("Could not update the server settings."));
-    (typeof back === "function" ? back : home)();
+let INSTALL = null;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); INSTALL = e; if ($("install")) { $("install").hidden = false; $("install").onclick = async () => { INSTALL.prompt(); await INSTALL.userChoice; INSTALL = null; home(); }; } });
+
+function joinScreen() {
+  view(`<div class="card"><h2>Join a session</h2>
+    <p class="sub">Your lecturer shows a QR code and a session code on the projector.</p>
+    <button class="primary big" type="button" id="scan">📷 Scan the QR code</button>
+    <div id="camBox" style="margin-top:12px"></div>
+    <label for="jc">Or type the session code</label>
+    <input type="text" id="jc" maxlength="8" autocomplete="off" placeholder="e.g. KTWM" style="text-transform:uppercase;font-size:22px;letter-spacing:3px">
+    <p class="err" id="jerr"></p>
+    <button class="big" type="button" id="jgo">Join</button>
+    <button class="link" type="button" id="back">Back</button></div>`);
+  $("back").onclick = home;
+  $("scan").onclick = () => startCam($("camBox"), (txt) => {
+    try { const u = new URL(txt); if (u.searchParams.get("join")) { history.replaceState(null, "", "?" + u.searchParams.toString()); joinFromParams(); stopCam(); joined(); return true; } } catch (e) {}
+    $("jerr").textContent = "That QR code is not a session code."; return false;
+  }, (msg) => ($("jerr").textContent = msg));
+  const go = async () => {
+    const code = scode($("jc").value);
+    if (code.length < 3) { $("jerr").textContent = "Type the code shown on the projector."; return; }
+    $("jerr").textContent = "Looking up the session…";
+    try {
+      if (!backend()) throw new Error("nobackend");
+      const r = await bGet({ action: "session", code });
+      const s = r.session;
+      SESSION = { code, stake: +s.stake, step: +s.step, cur: s.currency || "MWK", title: s.title || "" };
+      store.set("session", SESSION); joined();
+    } catch (e) {
+      $("jerr").innerHTML = e.message === "no such session" ? "No session with that code. Check the code on the projector." :
+        `Could not look up the code${navigator.onLine ? "" : " because you are offline"}. Scan the QR code instead, or <button class="link" type="button" id="offj">continue offline with ${money(1000)}</button>.`;
+      if ($("offj")) $("offj").onclick = () => { SESSION = { code, stake: 1000, step: 50, cur: "MWK", title: "" }; store.set("session", SESSION); joined(); };
+    }
   };
+  $("jgo").onclick = go; $("jc").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+}
+function joined() {
+  view(`<div class="card handoff"><div class="emoji">✅</div><h2>You joined session ${esc(SESSION.code)}</h2>
+    <p class="sub">${esc(SESSION.title || "")} Stake: ${money(SESSION.stake, SESSION.cur)}</p>
+    <button class="primary big" type="button" id="go">Start playing</button></div>`);
+  $("go").onclick = () => profile(soloStart);
 }
 
-/* ---------- solo: strategy method ---------- */
-function soloStart() {
-  const prev = store.get("solo", null);
-  view(`<div class="card"><h2>Play on my own</h2>
-    <p>You will make <b>three decisions</b> about how to divide <b>${money(settings.stake)}</b>. Afterwards your lecturer pairs everyone at random, so you do not know who your partner is.</p>
-    <label for="nk">Your nickname or student number</label>
-    <input type="text" id="nk" maxlength="10" placeholder="e.g. TAWONGA or 2023045" value="${prev ? esc(prev.n) : ""}">
-    <p class="muted">Letters and numbers only, up to 10. Leave blank to get a random ID.</p>
-    <button class="primary big" type="button" id="go">Start</button></div>`);
+function profile(next) {
+  view(`<div class="card"><h2>About you</h2>
+    <p class="sub">Your lecturer sees your name with your choices. Other students never see who their partner was.</p>
+    <label for="pn">Your name</label><input type="text" id="pn" maxlength="40" autocomplete="name" value="${esc(PROFILE.name)}">
+    <label for="ps">Student number <span class="muted">(optional)</span></label><input type="text" id="ps" maxlength="20" inputmode="numeric" value="${esc(PROFILE.sno)}">
+    <p class="err" id="perr"></p>
+    <button class="primary big" type="button" id="go">Continue</button></div>`);
   $("go").onclick = () => {
-    const n = nick($("nk").value) || randId();
-    S = { n, stake: settings.stake };
-    soloOffer();
+    const name = $("pn").value.trim().replace(/\s+/g, " ");
+    if (!name) { $("perr").textContent = "Please enter your name."; return; }
+    PROFILE = { name, sno: $("ps").value.trim() }; store.set("profile", PROFILE); next();
   };
 }
-let S = null;
-function soloOffer() {
-  view(`<div class="card"><span class="pill">Decision 1 of 3 · Ultimatum Game, as Proposer</span>
-    <h2>How much do you offer?</h2>
-    <p>You have <b>${money(S.stake)}</b>. Offer part of it to your partner. If your partner <b>accepts</b>, you each get your share. If your partner <b>rejects</b>, <b>both of you get nothing</b>.</p>
-    ${picker("o", S.o != null ? S.o : settings.stake / 2 - ((settings.stake / 2) % settings.step))}
-    <button class="primary big" type="button" id="next">Next</button></div>`);
-  wirePicker("o", "You keep", "Partner gets");
-  $("next").onclick = () => { S.o = +$("o").value; soloMin(); };
-}
-function soloMin() {
-  view(`<div class="card"><span class="pill">Decision 2 of 3 · Ultimatum Game, as Responder</span>
-    <h2>What is the smallest offer you would accept?</h2>
-    <p>Now someone else is the Proposer and makes you an offer out of <b>${money(S.stake)}</b>. Any offer <b>at or above</b> your answer is accepted. Any offer below it is rejected, and then <b>both of you get nothing</b>.</p>
-    ${picker("m", S.m != null ? S.m : 0)}
-    <button class="primary big" type="button" id="next">Next</button> <button class="link" type="button" id="back">Back</button></div>`);
-  wirePicker("m");
-  $("back").onclick = () => { S.m = +$("m").value; soloOffer(); };
-  $("next").onclick = () => { S.m = +$("m").value; soloGift(); };
-}
-function soloGift() {
-  view(`<div class="card"><span class="pill">Decision 3 of 3 · Dictator Game</span>
-    <h2>How much do you give?</h2>
-    <p>You have another <b>${money(S.stake)}</b>. This time your partner <b>cannot refuse</b>: whatever you give, they receive, and you keep the rest.</p>
-    ${picker("g", S.g != null ? S.g : 0)}
-    <button class="primary big" type="button" id="next">Next</button> <button class="link" type="button" id="back">Back</button></div>`);
-  wirePicker("g", "You keep", "Partner gets");
-  $("back").onclick = () => { S.g = +$("g").value; soloMin(); };
-  $("next").onclick = () => { S.g = +$("g").value; soloGuess(); };
-}
-function soloGuess() {
-  view(`<div class="card"><span class="pill">One last question</span>
-    <h2>What do you think the average offer in the class will be?</h2>
-    <p>In the Ultimatum Game (decision 1). There is no right answer.</p>
-    ${picker("b", S.b != null ? S.b : settings.stake / 2 - ((settings.stake / 2) % settings.step))}
-    <button class="primary big" type="button" id="next">Finish</button> <button class="link" type="button" id="back">Back</button></div>`);
-  wirePicker("b");
-  $("back").onclick = () => { S.b = +$("b").value; soloGift(); };
-  $("next").onclick = () => { S.b = +$("b").value; store.set("solo", S); showCode(soloCode(S), "solo"); };
-}
-const soloCode = (s) => `S-${s.n}-${s.o}-${s.m}-${s.g}-${s.b}-${s.stake}`;
 
-/* ---------- pair: direct method on one screen ---------- */
+/* ---------- amount picker ---------- */
+function picker(id, start, stake, step, labels) {
+  return `<div class="amount" id="${id}_v"></div>
+  ${labels ? `<div class="splitbar" aria-hidden="true"><div class="k" id="${id}_kb"></div><div class="g" id="${id}_gb"></div></div>
+  <div class="split"><span id="${id}_keep"></span><span id="${id}_give"></span></div>` : ""}
+  <input type="range" id="${id}" min="0" max="${stake}" step="${step}" value="${start}" aria-label="Amount">
+  <div class="stepper"><button type="button" data-d="-1" data-for="${id}" aria-label="Less">− ${step}</button><button type="button" data-d="1" data-for="${id}" aria-label="More">+ ${step}</button></div>`;
+}
+function wirePicker(id, stake, step, cur, labels) {
+  const r = $(id);
+  const upd = () => {
+    const v = +r.value; $(id + "_v").textContent = money(v, cur);
+    if (labels) {
+      $(id + "_keep").textContent = labels[0] + ": " + money(stake - v, cur); $(id + "_give").textContent = labels[1] + ": " + money(v, cur);
+      $(id + "_kb").style.width = (100 * (stake - v)) / stake + "%"; $(id + "_gb").style.width = (100 * v) / stake + "%";
+    }
+  };
+  r.addEventListener("input", upd);
+  document.querySelectorAll(`[data-for="${id}"]`).forEach((b) => (b.onclick = () => { r.value = Math.min(stake, Math.max(0, +r.value + +b.dataset.d * step)); upd(); }));
+  upd();
+}
+const half = (s, st) => s / 2 - ((s / 2) % st);
+const prog = (k, n) => `<div class="progress" aria-label="Step ${k} of ${n}">${Array.from({ length: n }, (_, i) => `<i class="${i < k ? "on" : ""}"></i>`).join("")}</div>`;
+
+/* ---------- solo play (strategy method) ---------- */
+let S = null;
+function soloStart() {
+  S = { stake: SESSION.stake, step: SESSION.step, cur: SESSION.cur, o: half(SESSION.stake, SESSION.step), m: 0, g: 0, b: half(SESSION.stake, SESSION.step) };
+  soloStep(1);
+}
+function soloStep(k) {
+  const st = S, steps = [
+    { tag: "Ultimatum Game · you propose", h: "How much do you offer your partner?", id: "o", labels: ["You keep", "Partner gets"],
+      p: `You have <b>${money(st.stake, st.cur)}</b>. Offer some of it to a random classmate. If they <b>accept</b>, you both get your shares. If they <b>reject</b>, <b>you both get nothing</b>.` },
+    { tag: "Ultimatum Game · you respond", h: "What is the smallest offer you would accept?", id: "m",
+      p: `Now a classmate has <b>${money(st.stake, st.cur)}</b> and makes you an offer. Offers <b>at or above</b> your answer are accepted. Offers below it are rejected, and then <b>you both get nothing</b>.` },
+    { tag: "Dictator Game · you decide", h: "How much do you give your partner?", id: "g", labels: ["You keep", "Partner gets"],
+      p: `You have another <b>${money(st.stake, st.cur)}</b>. This time your partner <b>cannot refuse</b>: whatever you give, they get.` },
+    { tag: "Your guess", h: "What will the average Ultimatum offer in the class be?", id: "b",
+      p: "There is no right or wrong answer." },
+  ];
+  const s = steps[k - 1];
+  view(`<div class="card">${prog(k, 5)}<span class="tag">${s.tag}</span><h2>${s.h}</h2><p>${s.p}</p>
+    ${picker(s.id, st[s.id], st.stake, st.step, s.labels)}
+    <button class="primary big" type="button" id="next">Next</button>
+    ${k > 1 ? '<button class="link" type="button" id="back">Back</button>' : ""}</div>`);
+  wirePicker(s.id, st.stake, st.step, st.cur, s.labels);
+  const save = () => (st[s.id] = +$(s.id).value);
+  $("next").onclick = () => { save(); k < 4 ? soloStep(k + 1) : soloReview(); };
+  if ($("back")) $("back").onclick = () => { save(); soloStep(k - 1); };
+}
+function soloReview() {
+  const st = S, rows = [
+    ["You offer in the Ultimatum Game", st.o, 1], ["The smallest offer you accept", st.m, 2], ["You give in the Dictator Game", st.g, 3], ["Your guess of the average offer", st.b, 4]];
+  view(`<div class="card">${prog(5, 5)}<h2>Check your answers</h2><p class="sub">You can change any answer before sending.</p>
+    <table class="review">${rows.map(([l, v, k]) => `<tr><td>${l}<br><button class="link small" type="button" data-k="${k}">Change</button></td><td class="v">${money(v, st.cur)}</td></tr>`).join("")}</table>
+    <button class="primary big" type="button" id="send">Submit my answers</button></div>`);
+  document.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => soloStep(+b.dataset.k)));
+  $("send").onclick = () => {
+    const item = { uid: rand(12), mode: "S", session: SESSION.code, name: PROFILE.name, sno: PROFILE.sno, partner: "", token: TOKEN,
+      stake: st.stake, o: st.o, m: st.m, r: "", g: st.g, b: st.b, t: new Date().toISOString() };
+    submitted(item);
+  };
+}
+async function submitted(item) {
+  const mine = store.get("mine", []); mine.push({ ...item, sent: false }); store.set("mine", mine.slice(-50));
+  queue([item]);
+  view(`<div class="card handoff"><div class="emoji">⏳</div><h2>Saving…</h2></div>`);
+  const ok = navigator.onLine && backend() ? await flush() : false;
+  const sent = !outbox().some((x) => x.uid === item.uid);
+  const code = codeOf(item);
+  view(`<div class="card" style="text-align:center"><div class="emoji">${sent ? "✅" : "💾"}</div>
+    <h2>${sent ? "Sent to your lecturer" : "Saved on this device"}</h2>
+    <div class="status ${sent ? "ok" : "wait"}" style="justify-content:center">${sent ? "Your answers have been received." :
+      backend() ? "They will be sent automatically when you are online. You can close the app." : "This device does not know where to send results. Show the code below to your lecturer."}</div>
+    <p class="sub">After your lecturer pairs the class, open <b>My results</b> to see what happened.</p>
+    ${sent ? "" : `<details style="text-align:left;margin-top:10px"><summary>No internet in class? Show this to your lecturer</summary>
+      <div class="qr">${qrSvg(code)}</div><div class="code">${esc(code)}</div></details>`}
+    <button class="primary big" type="button" id="res">My results</button>
+    <button class="big" type="button" id="hm">Done</button></div>`);
+  $("res").onclick = myResults; $("hm").onclick = home;
+}
+
+/* ---------- my results ---------- */
+async function myResults() {
+  const mine = store.get("mine", []).slice().reverse();
+  view(`<div class="card"><h2>My results</h2>
+    ${!mine.length ? `<p class="sub">You have not played yet.</p>` : `<div class="list" id="ml">${mine.map((m, i) => `
+      <div class="item"><div><b>Session ${esc(m.session || "on this device")}</b> <span class="muted small">${new Date(m.t).toLocaleString()}</span><br>
+      <span class="small sub">${m.mode === "S" ? `You offered ${money(m.o)} · accept from ${money(m.m)} · gave ${money(m.g)}` : `${esc(m.name)} and ${esc(m.partner)} played together`}</span>
+      <div id="oc${i}" class="small"></div></div>
+      <span class="pill">${outbox().some((x) => x.uid === m.uid) ? "waiting to send" : "sent"}</span></div>`).join("")}</div>`}
+    ${outbox().length ? `<button class="primary big" type="button" id="sync">Send now</button>` : ""}
+    <button class="big" type="button" id="hm">Back</button></div>`);
+  $("hm").onclick = home;
+  if ($("sync")) $("sync").onclick = async () => { $("sync").textContent = "Sending…"; await flush(); myResults(); };
+  if (!backend() || !navigator.onLine) { mine.forEach((m, i) => m.mode === "S" && ($("oc" + i).innerHTML = '<span class="muted">Connect to the internet to see your earnings.</span>')); return; }
+  mine.forEach(async (m, i) => {
+    const el = $("oc" + i); if (!el) return;
+    if (m.mode !== "S") { el.innerHTML = outcomePair(m); return; }
+    if (outbox().some((x) => x.uid === m.uid)) { el.innerHTML = '<span class="muted">Send your answers first.</span>'; return; }
+    el.innerHTML = '<span class="muted">Checking…</span>';
+    try {
+      const r = await bGet({ action: "outcome", uid: m.uid, token: m.token || TOKEN });
+      el.innerHTML = r.outcome ? outcomeSolo(r.outcome, m) : '<span class="muted">Not paired yet. Your lecturer will pair the class soon.</span>';
+    } catch (e) { el.innerHTML = '<span class="muted">Could not check right now.</span>'; }
+  });
+}
+function outcomeSolo(o, m) {
+  const acc1 = o.offer_made_result === "accepted", acc2 = o.offer_received_result === "accepted";
+  return `<div class="notice" style="margin-top:8px">
+    <b>Ultimatum, as proposer:</b> your offer of ${money(o.offer_made)} was <b>${o.offer_made_result}</b>.<br>
+    <b>Ultimatum, as responder:</b> a classmate offered you ${money(o.offer_received)}; it was <b>${o.offer_received_result}</b> (your minimum was ${money(m.m)}).<br>
+    <b>Dictator:</b> you gave ${money(o.dg_given)}; a classmate gave you ${money(o.dg_received)}.<br>
+    <b>Your total earnings: ${money(o.total)}</b>${!acc1 || !acc2 ? `<br><span class="small">A rejected offer means both players get nothing from that game.</span>` : ""}</div>`;
+}
+function outcomePair(m) {
+  const ok = m.r === "A";
+  return `<div class="notice" style="margin-top:8px">Ultimatum: ${esc(m.name)} offered ${money(m.o)}, ${esc(m.partner)} <b>${ok ? "accepted" : "rejected"}</b>. Dictator: ${esc(m.partner)} gave ${money(m.g)}.</div>`;
+}
+
+/* ---------- play with a partner on one device (direct method) ---------- */
 let P = null;
 function pairStart() {
+  const s = SESSION || { code: "", stake: 1000, step: 50, cur: "MWK" };
   view(`<div class="card"><h2>Play with a partner</h2>
-    <p>Two players share this screen. <b>Player A</b> makes an offer in the Ultimatum Game and <b>Player B</b> accepts or rejects it. Then you swap roles: <b>Player B</b> plays the Dictator Game.</p>
-    <div class="grid2"><div><label for="na">Player A nickname</label><input type="text" id="na" maxlength="10"></div>
-    <div><label for="nb">Player B nickname</label><input type="text" id="nb" maxlength="10"></div></div>
-    <p class="muted">Letters and numbers only. Leave blank for random IDs.</p>
-    <button class="primary big" type="button" id="go">Start</button></div>`);
+    <p class="sub">Two players share this screen. <b>Player A</b> offers part of ${money(s.stake, s.cur)}; <b>Player B</b> sees the offer and accepts or rejects it. Then B plays the Dictator Game.</p>
+    <div class="grid2"><div><label for="na">Player A name</label><input type="text" id="na" maxlength="40"></div>
+    <div><label for="nb">Player B name</label><input type="text" id="nb" maxlength="40"></div></div>
+    <p class="err" id="perr"></p><button class="primary big" type="button" id="go">Start</button>
+    <button class="link" type="button" id="back">Back</button></div>`);
+  $("back").onclick = home;
   $("go").onclick = () => {
-    let a = nick($("na").value) || randId(), b = nick($("nb").value) || randId();
-    if (a === b) b = b.slice(0, 9) + "2";
-    P = { a, b, stake: settings.stake }; handoff(P.a, P.b, pairOffer);
+    const a = $("na").value.trim(), b = $("nb").value.trim();
+    if (!a || !b || a.toLowerCase() === b.toLowerCase()) { $("perr").textContent = "Enter two different names."; return; }
+    P = { a, b, ...s }; handoff(a, b, pairOffer);
   };
 }
 function handoff(to, away, next) {
-  view(`<div class="card handoff"><div class="big-emoji" aria-hidden="true">🔁</div>
-    <h2>${esc(to)}, it is your turn</h2><p class="sub">${esc(away)}, please look away from the screen.</p>
-    <button class="primary big" type="button" id="ready">I am ${esc(to)}, show my screen</button></div>`);
+  view(`<div class="card handoff"><div class="emoji">🔁</div><h2>Pass the device to ${esc(to)}</h2><p class="sub">${esc(away)}, please look away.</p>
+    <button class="primary big" type="button" id="ready">I am ${esc(to)}</button></div>`);
   $("ready").onclick = next;
 }
 function pairOffer() {
-  view(`<div class="card"><span class="pill">Ultimatum Game · ${esc(P.a)} is the Proposer</span>
-    <h2>How much do you offer ${esc(P.b)}?</h2>
-    <p>You have <b>${money(P.stake)}</b>. If ${esc(P.b)} accepts, you each get your share. If ${esc(P.b)} rejects, <b>both of you get nothing</b>.</p>
-    ${picker("o", settings.stake / 2 - ((settings.stake / 2) % settings.step))}
-    <button class="primary big" type="button" id="next">Make this offer</button></div>`);
-  wirePicker("o", "You keep", P.b + " gets");
+  view(`<div class="card">${prog(1, 3)}<span class="tag">Ultimatum Game · ${esc(P.a)} proposes</span><h2>How much do you offer ${esc(P.b)}?</h2>
+    <p>If ${esc(P.b)} accepts, you both get your shares. If ${esc(P.b)} rejects, <b>you both get nothing</b>.</p>
+    ${picker("o", half(P.stake, P.step), P.stake, P.step, true)}<button class="primary big" type="button" id="next">Make this offer</button></div>`);
+  wirePicker("o", P.stake, P.step, P.cur, ["You keep", P.b + " gets"]);
   $("next").onclick = () => { P.o = +$("o").value; handoff(P.b, P.a, pairRespond); };
 }
 function pairRespond() {
-  view(`<div class="card"><span class="pill">Ultimatum Game · ${esc(P.b)} is the Responder</span>
-    <h2>${esc(P.a)} offers you ${money(P.o)}</h2>
-    <p>${esc(P.a)} would keep <b>${money(P.stake - P.o)}</b>. If you reject, <b>both of you get nothing</b>.</p>
+  view(`<div class="card">${prog(2, 3)}<span class="tag">Ultimatum Game · ${esc(P.b)} responds</span><h2>${esc(P.a)} offers you ${money(P.o, P.cur)}</h2>
+    <p>${esc(P.a)} would keep <b>${money(P.stake - P.o, P.cur)}</b>. If you reject, <b>you both get nothing</b>.</p>
     <div class="grid2"><button class="primary big" type="button" id="acc">Accept</button><button class="big" type="button" id="rej">Reject</button></div></div>`);
-  $("acc").onclick = () => { P.r = "A"; pairUResult(); };
-  $("rej").onclick = () => { P.r = "R"; pairUResult(); };
+  $("acc").onclick = () => { P.r = "A"; pairMid(); }; $("rej").onclick = () => { P.r = "R"; pairMid(); };
 }
-function pairUResult() {
+function pairMid() {
   const ok = P.r === "A";
-  view(`<div class="card"><span class="pill">Ultimatum Game · result</span>
-    <p class="result ${ok ? "ok" : "bad"}">${ok ? "Offer accepted" : "Offer rejected"}</p>
-    <table><tr><th>Player</th><th class="num">Earns</th></tr>
-    <tr><td>${esc(P.a)} (Proposer)</td><td class="num">${money(ok ? P.stake - P.o : 0)}</td></tr>
-    <tr><td>${esc(P.b)} (Responder)</td><td class="num">${money(ok ? P.o : 0)}</td></tr></table>
-    <p class="sub" style="margin-top:14px">Now swap roles for the Dictator Game.</p>
-    <button class="primary big" type="button" id="next">Continue</button></div>`);
-  $("next").onclick = () => handoff(P.b, P.a, pairGift);
+  view(`<div class="card handoff"><div class="emoji">${ok ? "🤝" : "❌"}</div><h2>${ok ? "Offer accepted" : "Offer rejected"}</h2>
+    <p>${esc(P.a)} gets ${money(ok ? P.stake - P.o : 0, P.cur)} · ${esc(P.b)} gets ${money(ok ? P.o : 0, P.cur)}</p>
+    <p class="sub">Next: ${esc(P.b)} plays the Dictator Game.</p><button class="primary big" type="button" id="n">Continue</button></div>`);
+  $("n").onclick = () => handoff(P.b, P.a, pairGift);
 }
 function pairGift() {
-  view(`<div class="card"><span class="pill">Dictator Game · ${esc(P.b)} decides</span>
-    <h2>How much do you give ${esc(P.a)}?</h2>
-    <p>You have <b>${money(P.stake)}</b>. ${esc(P.a)} <b>cannot refuse</b>: whatever you give, they receive, and you keep the rest.</p>
-    ${picker("g", 0)}
-    <button class="primary big" type="button" id="next">Give this amount</button></div>`);
-  wirePicker("g", "You keep", P.a + " gets");
-  $("next").onclick = () => { P.g = +$("g").value; store.set("pair", P); pairDone(); };
-}
-function pairDone() {
-  const ok = P.r === "A";
-  const ua = ok ? P.stake - P.o : 0, ub = ok ? P.o : 0;
-  view(`<div class="card"><h2>Both games finished</h2>
-    <table><tr><th>Player</th><th class="num">Ultimatum</th><th class="num">Dictator</th><th class="num">Total</th></tr>
-    <tr><td>${esc(P.a)}</td><td class="num">${money(ua)}</td><td class="num">${money(P.g)}</td><td class="num"><b>${money(ua + P.g)}</b></td></tr>
-    <tr><td>${esc(P.b)}</td><td class="num">${money(ub)}</td><td class="num">${money(P.stake - P.g)}</td><td class="num"><b>${money(ub + P.stake - P.g)}</b></td></tr></table>
-    <button class="primary big" type="button" id="next">Show code for the lecturer</button></div>`);
-  $("next").onclick = () => showCode(pairCode(P), "pair");
-}
-const pairCode = (p) => `P-${p.a}-${p.b}-${p.o}-${p.r}-${p.g}-${p.stake}`;
-
-/* ---------- hand-in screen ---------- */
-function showCode(code, kind) {
-  if (SERVER) return sendCode(code, kind);
-  view(`<div class="card" style="text-align:center"><h2>Hand in your result</h2>
-    <p class="sub">Show this screen to your lecturer, or send the code exactly as written.</p>
-    <div class="qr">${qrSvg(code)}</div>
-    <div class="code" id="code">${esc(code)}</div>
-    <div class="row" style="justify-content:center;margin-top:12px">
-      <button type="button" id="copy">Copy code</button>
-      <button type="button" id="save">Save as file</button>
-      ${kind === "solo" ? '<button type="button" id="edit">Change my answers</button>' : ""}
-    </div>
-    <p class="muted" id="msg"></p>
-    <button class="big" type="button" id="new">Next player (clear this screen)</button></div>`);
-  $("copy").onclick = async () => {
-    try { await navigator.clipboard.writeText(code); $("msg").textContent = "Copied."; }
-    catch (e) { $("msg").textContent = "Select the code and copy it by hand."; }
+  view(`<div class="card">${prog(3, 3)}<span class="tag">Dictator Game · ${esc(P.b)} decides</span><h2>How much do you give ${esc(P.a)}?</h2>
+    <p>You have ${money(P.stake, P.cur)}. ${esc(P.a)} <b>cannot refuse</b>.</p>
+    ${picker("g", 0, P.stake, P.step, true)}<button class="primary big" type="button" id="next">Give this amount</button></div>`);
+  wirePicker("g", P.stake, P.step, P.cur, ["You keep", P.a + " gets"]);
+  $("next").onclick = () => {
+    P.g = +$("g").value;
+    submitted({ uid: rand(12), mode: "P", session: P.code || "", name: P.a, sno: "", partner: P.b, token: TOKEN, stake: P.stake, o: P.o, m: "", r: P.r, g: P.g, b: "", t: new Date().toISOString() });
   };
-  $("save").onclick = () => download(`eco414-${code.split("-")[1]}.txt`, code + "\n", "text/plain");
-  if ($("edit")) $("edit").onclick = soloOffer;
-  $("new").onclick = () => { if (confirm("Clear this screen for the next player?")) { store.del("solo"); store.del("pair"); S = P = null; home(); } };
-}
-async function sendCode(code, kind) {
-  view(`<div class="card" style="text-align:center"><h2>Sending your result…</h2></div>`);
-  let ok = false;
-  for (let i = 0; i < 3 && !ok; i++) {
-    try { await api("/api/submit", { code }); ok = true; } catch (e) { await new Promise((r) => setTimeout(r, 800)); }
-  }
-  view(`<div class="card" style="text-align:center">
-    ${ok ? `<div class="big-emoji" style="font-size:56px" aria-hidden="true">✅</div><h2>Sent to your lecturer</h2>
-      <p class="sub">Thank you. Your lecturer will show the class results on the projector.</p>`
-         : `<h2>Could not reach the lecturer's computer</h2><p class="sub">Check the network and try again, or show this code to your lecturer.</p>
-      <div class="code">${esc(code)}</div><button class="primary big" type="button" id="retry">Try again</button>`}
-    ${kind === "solo" && ok ? '<button class="link" type="button" id="edit">Change my answers (sends again)</button>' : ""}
-    <button class="big" type="button" id="new">Next player (clear this screen)</button></div>`);
-  if ($("retry")) $("retry").onclick = () => sendCode(code, kind);
-  if ($("edit")) $("edit").onclick = soloOffer;
-  $("new").onclick = () => { store.del("solo"); store.del("pair"); S = P = null; home(); };
-}
-function download(name, text, type) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type }));
-  a.download = name; document.body.appendChild(a); a.click();
-  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
 
-/* ---------- lecturer: collection ---------- */
-const RE = /\b(?:S-([A-Z0-9]{1,10})-(\d+)-(\d+)-(\d+)-(\d+)-(\d+)|P-([A-Z0-9]{1,10})-([A-Z0-9]{1,10})-(\d+)-([AR])-(\d+)-(\d+))\b/g;
+/* ---------- backup codes (when a device can never get online) ---------- */
+const codeOf = (d) => d.mode === "S" ? `S-${d.session || "X"}-${nick(d.name) || "ANON"}-${d.o}-${d.m}-${d.g}-${d.b}-${d.stake}`
+  : `P-${d.session || "X"}-${nick(d.name)}-${nick(d.partner)}-${d.o}-${d.r}-${d.g}-${d.stake}`;
+const CODE_RE = /\b(?:S-([A-Z0-9]{1,8})-([A-Z0-9]{1,10})-(\d+)-(\d+)-(\d+)-(\d+)-(\d+)|P-([A-Z0-9]{1,8})-([A-Z0-9]{1,10})-([A-Z0-9]{1,10})-(\d+)-([AR])-(\d+)-(\d+))\b/g;
 function parseCodes(text) {
-  const out = []; let m;
-  const t = String(text).toUpperCase(); RE.lastIndex = 0;
-  while ((m = RE.exec(t))) {
-    if (m[1]) {
-      const r = { t: "S", n: m[1], o: +m[2], m: +m[3], g: +m[4], b: +m[5], stake: +m[6] };
-      if (r.stake > 0 && r.o <= r.stake && r.m <= r.stake && r.g <= r.stake && r.b <= r.stake) out.push(r);
-    } else {
-      const r = { t: "P", a: m[7], b: m[8], o: +m[9], r: m[10], g: +m[11], stake: +m[12] };
-      if (r.stake > 0 && r.o <= r.stake && r.g <= r.stake) out.push(r);
-    }
+  const out = []; let m; const t = String(text).toUpperCase(); CODE_RE.lastIndex = 0;
+  while ((m = CODE_RE.exec(t))) {
+    const now = new Date().toISOString();
+    if (m[1]) { const r = { uid: "C" + m[0], mode: "S", session: m[1] === "X" ? "" : m[1], name: m[2], sno: "", partner: "", token: "", stake: +m[7], o: +m[3], m: +m[4], r: "", g: +m[5], b: +m[6], t: now };
+      if (r.stake > 0 && [r.o, r.m, r.g, r.b].every((x) => x <= r.stake)) out.push(r); }
+    else { const r = { uid: "C" + m[0], mode: "P", session: m[8] === "X" ? "" : m[8], name: m[9], sno: "", partner: m[10], token: "", stake: +m[14], o: +m[11], m: "", r: m[12], g: +m[13], b: "", t: now };
+      if (r.stake > 0 && r.o <= r.stake && r.g <= r.stake) out.push(r); }
   }
   return out;
 }
-const keyOf = (r) => r.t === "S" ? "S:" + r.n : "P:" + r.a + ":" + r.b;
-let DATA = store.get("data", []);
-function addRecords(recs) {
-  let added = 0, replaced = 0;
-  for (const r of recs) {
-    const k = keyOf(r), i = DATA.findIndex((d) => keyOf(d) === k);
-    if (i >= 0) { if (JSON.stringify(DATA[i]) !== JSON.stringify(r)) { DATA[i] = r; replaced++; } }
-    else { DATA.push(r); added++; }
-  }
-  store.set("data", DATA); return { added, replaced, found: recs.length };
-}
 
-let LTAB = SERVER ? "join" : "collect";
-const countText = () => { const nS = DATA.filter((d) => d.t === "S").length, nP = DATA.filter((d) => d.t === "P").length;
-  return `${nS} solo player${nS === 1 ? "" : "s"} and ${nP} pair${nP === 1 ? "" : "s"} ${SERVER ? "received" : "collected"}.`; };
-function lecturer(tab) {
-  if (SERVER && !PIN) return pinGate(tab);
-  if (tab) LTAB = tab;
-  const tabs = [...(SERVER ? [["join", "Students join"]] : []), ["collect", SERVER ? "Add codes by hand" : "Collect results"],
-    ["results", "Class results"], ["match", "Match and pay"], ["data", "Data"]];
-  view(`<div class="tabs noprint">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" class="${LTAB === k ? "on" : ""}">${l}</button>`).join("")}
-    <button type="button" id="present" class="primary">Present to class</button></div>
-    <p class="muted" id="lcount">${countText()}${SERVER ? ' <span class="pill">live</span>' : ""}</p>
-    <div id="lt"></div>`, LTAB !== "collect" && LTAB !== "join");
-  document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { stopCam(); lecturer(b.dataset.tab); }));
-  $("present").onclick = () => { stopCam(); present(); };
-  ({ join: lJoin, collect: lCollect, results: lResults, match: lMatch, data: lData })[LTAB]();
-  if (SERVER) startPoll();
-}
-function pinGate(tab) {
-  view(`<div class="card"><h2>Lecturer</h2><p class="sub">Enter the PIN shown in the server window on your laptop.</p>
-    <label for="pin">PIN</label><input type="text" id="pin" inputmode="numeric" maxlength="8" autocomplete="off">
-    <p class="err" id="perr"></p><button class="primary big" type="button" id="pgo">Open the lecturer page</button></div>`);
-  const go = async () => {
-    PIN = $("pin").value.trim();
-    try { await syncFromServer(); try { sessionStorage.setItem("eco414.pin", PIN); } catch (e) {} lecturer(tab); }
-    catch (e) { PIN = ""; $("perr").textContent = e.message === "pin" ? "Wrong PIN." : "Cannot reach the server."; }
-  };
-  $("pgo").onclick = go; $("pin").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); $("pin").focus();
-}
-/* the server is the record of what was received; the lecturer page mirrors it */
-let LASTN = -1, POLL = null;
-async function syncFromServer() {
-  const r = await api("/api/results");
-  if (r.n === LASTN) return false;
-  LASTN = r.n; DATA = []; addRecords(parseCodes(r.codes.join("\n")));
-  return true;
-}
-function startPoll() {
-  if (POLL) return;
-  POLL = setInterval(async () => {
-    if (!$("lcount") && !$("pres")) { clearInterval(POLL); POLL = null; return; }
-    try {
-      if (!(await syncFromServer())) return;
-      if ($("pres")) return present();
-      $("lcount").innerHTML = countText() + ' <span class="pill">live</span>';
-      if (LTAB === "results" || LTAB === "data" || LTAB === "join") lecturer(LTAB);
-    } catch (e) { if ($("lcount")) $("lcount").innerHTML = countText() + ' <span class="pill">server not reachable</span>'; }
-  }, 3000);
-}
-async function lJoin() {
-  let info = { ips: [], port: location.port };
-  try { info = await api("/api/info"); } catch (e) {}
-  const urls = info.ips.map((ip) => `http://${ip}:${info.port}`);
-  $("lt").innerHTML = `<div class="card" style="text-align:center"><h2>Join the game</h2>
-    ${urls.length ? `<p class="sub">Connect to the same Wi-Fi or lab network, then scan or type:</p>
-      <div class="qr">${qrSvg(urls[0])}</div><div class="code" style="font-size:34px">${esc(urls[0].replace("http://", ""))}</div>
-      ${urls.length > 1 ? `<p class="muted">Other addresses of this laptop: ${urls.slice(1).map((u) => esc(u.replace("http://", ""))).join(", ")}</p>` : ""}`
-      : `<p class="err">This laptop is not connected to a network. Connect to Wi-Fi or turn on the mobile hotspot, then reopen this tab.</p>`}
-    <p class="sub" style="margin-top:14px">Stake: ${money(settings.stake)} in steps of ${settings.step}. <button class="link noprint" type="button" id="cset">Change</button></p>
-    <p class="muted">${countText()}</p></div>`;
-  $("cset").onclick = () => stakeSettings(() => lecturer("join"));
-}
-
-/* ---------- projector view: results only, no names ---------- */
-function present() {
-  const s = DATA.filter((d) => d.t === "S"), p = DATA.filter((d) => d.t === "P");
-  const offers = [...s, ...p].map((d) => pct(d.o, d.stake)), gifts = [...s, ...p].map((d) => pct(d.g, d.stake));
-  const mins = s.map((d) => pct(d.m, d.stake)), guesses = s.map((d) => pct(d.b, d.stake));
-  const rej = p.filter((d) => d.r === "R").length;
-  view(`<div id="pres" style="font-size:20px">
-    <div class="row noprint" style="justify-content:space-between"><h2 style="font-size:30px;margin:0">Class results</h2>
-      <div class="row"><span class="pill" style="font-size:16px">${offers.length} players</span>
-      <button type="button" id="fs">Full screen</button><button type="button" id="px">Back</button></div></div>
-    ${!offers.length ? `<div class="card" style="margin-top:16px"><p>Waiting for results…</p></div>` : `
-    <div class="stats" style="margin:16px 0">
-      <div class="stat"><div class="v" style="font-size:40px">${f0(mean(offers))}</div><div class="l" style="font-size:16px">Average Ultimatum offer</div></div>
-      <div class="stat"><div class="v" style="font-size:40px">${f0(mean(gifts))}</div><div class="l" style="font-size:16px">Average Dictator gift</div></div>
-      <div class="stat"><div class="v" style="font-size:40px">${f0((100 * gifts.filter((x) => x === 0).length) / gifts.length)}</div><div class="l" style="font-size:16px">Gave nothing as Dictator</div></div>
-      ${s.length ? `<div class="stat"><div class="v" style="font-size:40px">${f0(mean(mins))}</div><div class="l" style="font-size:16px">Average minimum acceptable offer</div></div>
-      <div class="stat"><div class="v" style="font-size:40px">${f0(mean(guesses))}</div><div class="l" style="font-size:16px">You guessed the average offer would be</div></div>` : ""}
-      ${p.length ? `<div class="stat"><div class="v" style="font-size:40px">${rej} of ${p.length}</div><div class="l" style="font-size:16px">Live offers rejected</div></div>` : ""}
-    </div>
-    <div class="card"><h3 style="margin-top:0">Ultimatum offers and Dictator gifts</h3>
-      <div class="legend" style="font-size:16px"><span><i style="background:var(--ug)"></i>Ultimatum offer</span><span><i style="background:var(--dg)"></i>Dictator gift</span></div>
-      <div class="chart" id="pc1"></div></div>
-    ${s.length ? `<div class="card"><h3 style="margin-top:0">Share who would accept each offer</h3><div class="chart" id="pc2"></div></div>` : ""}`}
-  </div>`, true);
-  if (offers.length) { barChart($("pc1"), shares(offers), shares(gifts), offers.length, gifts.length); if (s.length) acceptChart($("pc2"), mins); }
-  $("px").onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); lecturer(LTAB); };
-  $("fs").onclick = () => document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {});
-  if (SERVER) startPoll();
-}
-function lCollect() {
-  $("lt").innerHTML = `<div class="card"><h2>Collect results</h2>
-    <h3>1. Type or paste codes</h3>
-    <p class="sub">Paste as many codes as you like, for example a batch copied from a WhatsApp group. Anything that is not a code is ignored.</p>
-    <textarea id="paste" placeholder="S-TAWONGA-500-300-200-400-1000"></textarea>
-    <button class="primary" type="button" id="addBtn" style="margin-top:8px">Add codes</button>
-    <h3>2. Scan QR codes with the camera</h3>
-    <p class="sub">Point the camera at each student's screen. Each new code beeps once.</p>
-    <button type="button" id="camBtn">Start camera</button>
-    <div id="camBox" style="margin-top:10px"></div>
-    <h3>3. Import result files</h3>
-    <p class="sub">For lab computers: students press <i>Save as file</i> to a shared folder or USB stick; select all the files here.</p>
-    <input type="file" id="files" multiple accept=".txt,text/plain">
-    <p id="cmsg" class="notice" style="margin-top:14px">Ready.</p>
-    <h3>Game settings for students</h3>
-    <p class="sub">Students on this device use ${money(settings.stake)} in steps of ${settings.step}. <button class="link" type="button" id="cset">Change</button></p>
-  </div>`;
-  const report = (res, src) => {
-    $("cmsg").textContent = res.found === 0 ? `No valid codes found in ${src}.` :
-      res.added + res.replaced === 0 ? `Those codes were already collected. Total collected: ${DATA.length}.` :
-      `${res.added} new, ${res.replaced} updated from ${src}. Total collected: ${DATA.length}.`;
-  };
-  $("addBtn").onclick = () => { const recs = parseCodes($("paste").value); report(addRecords(recs), "the text"); push(recs); if (recs.length) $("paste").value = ""; };
-  $("files").onchange = async (e) => {
-    let txt = ""; for (const f of e.target.files) txt += (await f.text()) + "\n";
-    const recs = parseCodes(txt); report(addRecords(recs), e.target.files.length + " file(s)"); push(recs); e.target.value = "";
-  };
-  $("camBtn").onclick = () => (CAM ? stopCam() : startCam(report));
-  $("cset").onclick = () => stakeSettings(() => lecturer("collect"));
-}
+/* ---------- camera (QR) ---------- */
 let CAM = null;
-async function startCam(report) {
-  if (!navigator.mediaDevices || typeof jsQR !== "function") { $("cmsg").textContent = "This browser cannot use the camera here. Use typed codes or files."; return; }
+async function startCam(box, onText, onErr) {
+  if (CAM) { stopCam(); return; }
+  if (!navigator.mediaDevices || typeof jsQR !== "function") { onErr("This device cannot use the camera here."); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    $("camBox").innerHTML = '<video id="vid" playsinline muted></video>';
+    box.innerHTML = '<video id="vid" playsinline muted></video>';
     const v = $("vid"); v.srcObject = stream; await v.play();
     const c = document.createElement("canvas"), ctx = c.getContext("2d", { willReadFrequently: true });
     let last = "";
-    CAM = { stream, timer: setInterval(() => {
+    CAM = { stream, box, timer: setInterval(() => {
       if (!v.videoWidth) return;
       c.width = v.videoWidth; c.height = v.videoHeight; ctx.drawImage(v, 0, 0);
       const q = jsQR(ctx.getImageData(0, 0, c.width, c.height).data, c.width, c.height, { inversionAttempts: "dontInvert" });
-      if (q && q.data && q.data !== last) {
-        last = q.data; const recs = parseCodes(q.data), res = addRecords(recs); push(recs);
-        if (res.added + res.replaced) { beep(); report(res, "the camera"); }
-      }
+      if (q && q.data && q.data !== last) { last = q.data; if (onText(q.data)) beep(); }
     }, 250) };
-    $("camBtn").textContent = "Stop camera";
-  } catch (e) { $("cmsg").textContent = "Camera not available (" + e.name + "). Use typed codes or files."; }
+  } catch (e) { onErr("Camera not available. Type the code instead."); }
 }
-async function push(recs) {  // codes added by hand on the lecturer page also go to the server
-  if (!SERVER) return;
-  for (const r of recs) { try { await api("/api/submit", { code: codeOf(r) }); } catch (e) {} }
+function stopCam() { if (!CAM) return; clearInterval(CAM.timer); CAM.stream.getTracks().forEach((t) => t.stop()); if (CAM.box) CAM.box.innerHTML = ""; CAM = null; }
+function beep() { try { const a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(); o.frequency.value = 880; o.connect(a.destination); o.start(); o.stop(a.currentTime + 0.12); } catch (e) {} }
+
+/* =====================================================================
+   LECTURER
+   ===================================================================== */
+let KEY = SERVER ? "" : store.get("lkey", "");
+try { if (SERVER) KEY = sessionStorage.getItem("eco414.pin") || ""; } catch (e) {}
+let SESSIONS = store.get("lsessions", []);     // sessions created on this device
+let CUR = store.get("lcur", "");               // selected session code
+let REMOTE = store.get("lremote", []);         // responses downloaded from the backend
+let LOCAL = store.get("llocal", []);           // codes typed or scanned on this device
+let LAST = store.get("llast", "");
+let LTAB = "join";
+
+function lecturer(tab) {
+  if (!KEY || (!SERVER && !backend())) return lSetup();
+  if (tab) LTAB = tab;
+  if (!SESSIONS.length) return lNewSession();
+  if (!SESSIONS.some((s) => s.code === CUR)) { CUR = SESSIONS[SESSIONS.length - 1].code; store.set("lcur", CUR); }
+  const tabs = [["join", "Students join"], ["live", "Results"], ["pair", "Pair and pay"], ["data", "Data"], ["codes", "Add codes"]];
+  view(`<div class="bar noprint"><label for="ses" style="margin:0">Session</label>
+      <select id="ses">${SESSIONS.slice().reverse().map((s) => `<option value="${esc(s.code)}" ${s.code === CUR ? "selected" : ""}>${esc(s.code)}${s.title ? " · " + esc(s.title) : ""} (${money(s.stake, s.cur)})</option>`).join("")}</select>
+      <button type="button" id="newS">+ New session</button><button type="button" id="cfg">Settings</button></div>
+    <div class="tabs noprint">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" class="${LTAB === k ? "on" : ""}">${l}</button>`).join("")}
+      <button type="button" id="present" class="primary">Present to class</button></div>
+    <p class="muted small" id="lstat"></p><div id="lt"></div>`, true);
+  $("ses").onchange = () => { CUR = $("ses").value; store.set("lcur", CUR); lecturer(); };
+  $("newS").onclick = lNewSession; $("cfg").onclick = lSetup;
+  document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => lecturer(b.dataset.tab)));
+  $("present").onclick = present;
+  lStat();
+  ({ join: lJoin, live: lLive, pair: lPair, data: lData, codes: lCodes })[LTAB]();
+  startPoll();
 }
-function stopCam() {
-  if (!CAM) return; clearInterval(CAM.timer); CAM.stream.getTracks().forEach((t) => t.stop()); CAM = null;
-  if ($("camBox")) $("camBox").innerHTML = ""; if ($("camBtn")) $("camBtn").textContent = "Start camera";
-}
-function beep() {
-  try { const a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(); o.frequency.value = 880; o.connect(a.destination); o.start(); o.stop(a.currentTime + 0.12); } catch (e) {}
+const curSession = () => SESSIONS.find((s) => s.code === CUR);
+function lStat() {
+  const d = sessionData(), n = d.filter((x) => x.mode === "S").length, p = d.filter((x) => x.mode === "P").length;
+  if ($("lstat")) $("lstat").innerHTML = `${n} student${n === 1 ? "" : "s"}${p ? ` and ${p} pair${p === 1 ? "" : "s"}` : ""} in this session · ${LAST ? "last synced " + new Date(LAST).toLocaleTimeString() : "not synced yet"}${navigator.onLine || SERVER ? "" : " · offline"}${outbox().length ? ` · ${outbox().length} waiting to upload` : ""}`;
 }
 
-/* ---------- lecturer: results ---------- */
+function lSetup() {
+  view(`<div class="card"><h2>Lecturer setup</h2>
+    ${SERVER ? `<p class="sub">Enter the PIN shown in the server window on your laptop.</p>
+      <label for="k">PIN</label><input type="password" id="k" inputmode="numeric" maxlength="8" autocomplete="off">`
+    : `<p class="sub">Results are stored in your Google Sheet. Paste the web app address and the lecturer key from the setup guide (<i>backend/SETUP.md</i>). This is saved on this device only.</p>
+      <label for="u">Web app address</label><input type="url" id="u" placeholder="https://script.google.com/macros/s/…/exec" value="${esc(store.get("backend", "") || DEFAULT_BACKEND)}">
+      <label for="k">Lecturer key</label><input type="password" id="k" autocomplete="off" value="${esc(KEY)}">`}
+    <p class="err" id="e"></p><button class="primary big" type="button" id="go">${SERVER ? "Open the lecturer page" : "Save and test"}</button>
+    <button class="link" type="button" id="back">Back</button></div>`);
+  $("back").onclick = home;
+  const go = async () => {
+    const k = $("k").value.trim(); if (!k) { $("e").textContent = "Enter the " + (SERVER ? "PIN." : "key."); return; }
+    if (!SERVER) { const u = $("u").value.trim(); if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)) { $("e").textContent = "The address should start with https://script.google.com/"; return; } store.set("backend", u); }
+    $("e").textContent = "Checking…";
+    try { await bGet({ action: "check", key: k }); KEY = k; if (SERVER) { try { sessionStorage.setItem("eco414.pin", k); } catch (e) {} } else store.set("lkey", k); lecturer(); }
+    catch (e) { $("e").textContent = e.message === "key" ? (SERVER ? "Wrong PIN." : "Wrong key.") : "Cannot reach " + (SERVER ? "the server." : "the Google Sheet. Check the address and your internet."); }
+  };
+  $("go").onclick = go; $("k").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+}
+
+function lNewSession() {
+  const last = SESSIONS[SESSIONS.length - 1] || { stake: 1000, step: 50, cur: "MWK" };
+  view(`<div class="card"><h2>New session</h2><p class="sub">One session per class or tutorial group. Students join it with a code.</p>
+    <label for="st">Title <span class="muted">(optional)</span></label><input type="text" id="st" maxlength="60" placeholder="e.g. Week 5, Tuesday group">
+    <div class="grid2"><div><label for="sk">Amount to divide</label><input type="number" id="sk" min="10" step="10" value="${last.stake}"></div>
+    <div><label for="sp">Steps of</label><input type="number" id="sp" min="1" value="${last.step}"></div></div>
+    <label for="sc">Currency</label><input type="text" id="sc" maxlength="6" value="${esc(last.cur)}">
+    <p class="err" id="e"></p><button class="primary big" type="button" id="go">Create session</button>
+    ${SESSIONS.length ? '<button class="link" type="button" id="back">Cancel</button>' : ""}</div>`, false);
+  if ($("back")) $("back").onclick = () => lecturer();
+  $("go").onclick = async () => {
+    const stake = Math.round(+$("sk").value), step = Math.round(+$("sp").value);
+    if (!(stake >= 10) || !(step >= 1) || stake % step) { $("e").textContent = "The amount must be a multiple of the step."; return; }
+    const s = { code: rand(4), title: $("st").value.trim(), stake, step, cur: ($("sc").value || "MWK").trim().slice(0, 6), created: new Date().toISOString(), synced: false };
+    SESSIONS.push(s); store.set("lsessions", SESSIONS); CUR = s.code; store.set("lcur", CUR);
+    syncSessions(); LTAB = "join"; lecturer();
+  };
+}
+async function syncSessions() {
+  for (const s of SESSIONS.filter((x) => !x.synced)) {
+    try { await bPost({ action: "createSession", key: KEY, code: s.code, stake: s.stake, step: s.step, cur: s.cur, title: s.title }); s.synced = true; store.set("lsessions", SESSIONS); } catch (e) { return; }
+  }
+}
+
+async function lJoin() {
+  if (SERVER && !SERVER_BASE) {
+    try { const i = await bGet({ action: "info" }); if (i.ips.length) SERVER_BASE = `http://${i.ips[0]}:${i.port}/`; } catch (e) {}
+    if (!$("lt")) return;
+    if (!SERVER_BASE) { $("lt").innerHTML = `<div class="card"><p class="err">This laptop is not connected to a network. Connect to Wi-Fi or turn on the mobile hotspot, then open this tab again.</p></div>`; return; }
+  }
+  const s = curSession(), url = joinUrl(s);
+  $("lt").innerHTML = `<div class="card" style="text-align:center">
+    <h2 style="font-size:28px">Join session</h2>
+    <div class="qr big">${qrSvg(url)}</div>
+    <p class="sub" style="font-size:18px">Scan with your phone camera, or open the app and type the code:</p>
+    <div class="code huge">${esc(s.code)}</div>
+    <p class="sub" style="margin-top:12px">${esc(s.title || "")} · ${money(s.stake, s.cur)} in steps of ${s.step}</p>
+    <p class="muted small" style="word-break:break-all">${esc(url)}</p>
+    ${SERVER ? `<p class="small notice">Students must be on the same Wi-Fi or lab network as this laptop.</p>` : `<p class="small notice">Students without internet can still play once the app is installed; their answers are sent when they reconnect.</p>`}
+  </div>`;
+}
+
+/* ---------- data: remote (sheet/server) + local codes ---------- */
+function allData() {
+  const m = new Map();
+  [...REMOTE, ...LOCAL].forEach((d) => m.set(d.uid, d));
+  return [...m.values()];
+}
+function sessionData() {
+  // latest answer per student (a student may change answers and submit again)
+  const by = new Map();
+  allData().filter((d) => (d.session || "") === CUR).sort((a, b) => String(a.received || a.t).localeCompare(String(b.received || b.t)))
+    .forEach((d) => by.set(d.mode === "S" ? "S|" + (d.sno || nick(d.name)) : "P|" + nick(d.name) + "|" + nick(d.partner), d));
+  return [...by.values()];
+}
+async function pull() {
+  await syncSessions(); await flush();
+  const r = await bGet({ action: "results", key: KEY });
+  REMOTE = (r.responses || []).map(fromRow); store.set("lremote", REMOTE);
+  LAST = new Date().toISOString(); store.set("llast", LAST);
+  (r.sessions || []).forEach((x) => { if (!SESSIONS.some((s) => s.code === String(x.code))) SESSIONS.push({ code: String(x.code), title: x.title || "", stake: +x.stake, step: +x.step, cur: x.currency || "MWK", created: x.created, synced: true }); });
+  store.set("lsessions", SESSIONS);
+}
+const fromRow = (x) => ({ uid: String(x.uid), mode: x.mode, session: String(x.session || ""), name: String(x.name || ""), sno: String(x.student_no || ""), partner: String(x.partner || ""),
+  stake: +x.stake, o: +x.ug_offer, m: x.ug_min_accept === "" ? "" : +x.ug_min_accept, r: x.ug_response === "accept" ? "A" : x.ug_response === "reject" ? "R" : "",
+  g: +x.dg_gift, b: x.guess_avg_offer === "" ? "" : +x.guess_avg_offer, t: String(x.client_time || ""), received: String(x.received || "") });
+let POLL = null, SIG = "";
+function startPoll() {
+  if (POLL) return;
+  const tick = async () => {
+    if (!document.getElementById("lstat") && !document.getElementById("pres")) { clearInterval(POLL); POLL = null; return; }
+    try {
+      await pull();
+      const sig = sessionData().map((d) => d.uid).join();
+      if (sig !== SIG) { SIG = sig; if ($("pres")) present(); else if (["live", "data", "pair"].includes(LTAB) && !document.activeElement.matches("input,textarea,select")) lecturer(LTAB); }
+    } catch (e) {}
+    lStat();
+  };
+  tick(); POLL = setInterval(tick, SERVER ? 3000 : 6000);
+}
+
+/* ---------- results ---------- */
 const pct = (x, s) => (100 * x) / s;
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN);
 const median = (a) => { if (!a.length) return NaN; const b = [...a].sort((x, y) => x - y), k = b.length >> 1; return b.length % 2 ? b[k] : (b[k - 1] + b[k]) / 2; };
 const f0 = (x) => (isNaN(x) ? "–" : Math.round(x) + "%");
 const BINS = ["0%", "1–10%", "11–20%", "21–30%", "31–40%", "41–50%", "51–60%", "61–70%", "71–80%", "81–90%", "91–100%"];
 const binOf = (p) => (p <= 0 ? 0 : Math.min(10, Math.ceil(p / 10)));
-function shares(ps) { const c = new Array(11).fill(0); ps.forEach((p) => c[binOf(p)]++); return c.map((x) => (ps.length ? (100 * x) / ps.length : 0)); }
-
-function lResults() {
-  const s = DATA.filter((d) => d.t === "S"), p = DATA.filter((d) => d.t === "P");
-  if (!DATA.length) { $("lt").innerHTML = `<div class="card"><p>No results yet. Collect codes first.</p></div>`; return; }
-  const offers = [...s.map((d) => pct(d.o, d.stake)), ...p.map((d) => pct(d.o, d.stake))];
-  const gifts = [...s.map((d) => pct(d.g, d.stake)), ...p.map((d) => pct(d.g, d.stake))];
-  const mins = s.map((d) => pct(d.m, d.stake)), guesses = s.map((d) => pct(d.b, d.stake));
-  const rej = p.filter((d) => d.r === "R").length;
-  const fair = offers.filter((x) => x >= 40 && x <= 50).length;
-  $("lt").innerHTML = `<div class="card"><h2>Class results</h2>
-    <p class="sub">All amounts are shown as a share of the stake, so different stakes can be combined.</p>
-    <div class="stats">
-      <div class="stat"><div class="v">${f0(mean(offers))}</div><div class="l">Average Ultimatum offer (median ${f0(median(offers))})</div></div>
-      <div class="stat"><div class="v">${f0(mean(gifts))}</div><div class="l">Average Dictator gift (median ${f0(median(gifts))})</div></div>
-      <div class="stat"><div class="v">${f0((100 * fair) / offers.length)}</div><div class="l">Offered 40–50% in the Ultimatum Game</div></div>
-      <div class="stat"><div class="v">${f0((100 * gifts.filter((x) => x === 0).length) / gifts.length)}</div><div class="l">Gave nothing in the Dictator Game</div></div>
-      ${s.length ? `<div class="stat"><div class="v">${f0(mean(mins))}</div><div class="l">Average minimum acceptable offer</div></div>
-      <div class="stat"><div class="v">${f0(mean(guesses))}</div><div class="l">Average guess of the class offer (actual ${f0(mean(offers))})</div></div>` : ""}
-      ${p.length ? `<div class="stat"><div class="v">${rej} of ${p.length}</div><div class="l">Live offers rejected (pairs)</div></div>` : ""}
-    </div>
+const shares = (ps) => { const c = new Array(11).fill(0); ps.forEach((p) => c[binOf(p)]++); return c.map((x) => (ps.length ? (100 * x) / ps.length : 0)); };
+function summary(d) {
+  const s = d.filter((x) => x.mode === "S"), p = d.filter((x) => x.mode === "P");
+  return { s, p, offers: d.map((x) => pct(x.o, x.stake)), gifts: d.map((x) => pct(x.g, x.stake)), mins: s.map((x) => pct(x.m, x.stake)),
+    guesses: s.filter((x) => x.b !== "").map((x) => pct(x.b, x.stake)), rej: p.filter((x) => x.r === "R").length };
+}
+function statsHtml(S, big) {
+  const st = (v, l) => `<div class="stat"><div class="v" ${big ? 'style="font-size:40px"' : ""}>${v}</div><div class="l" ${big ? 'style="font-size:16px"' : ""}>${l}</div></div>`;
+  return `<div class="stats">${st(f0(mean(S.offers)), `Average Ultimatum offer${big ? "" : ` (median ${f0(median(S.offers))})`}`)}
+    ${st(f0(mean(S.gifts)), "Average Dictator gift")}
+    ${st(f0((100 * S.gifts.filter((x) => x === 0).length) / S.gifts.length), "Gave nothing as Dictator")}
+    ${S.s.length ? st(f0(mean(S.mins)), "Average minimum acceptable offer") + st(f0(mean(S.guesses)), big ? "You guessed the average offer would be" : "Average guess of the class offer") : ""}
+    ${S.p.length ? st(`${S.rej} of ${S.p.length}`, "Live offers rejected") : ""}</div>`;
+}
+function lLive() {
+  const d = sessionData();
+  if (!d.length) { $("lt").innerHTML = `<div class="card"><p>No results yet for this session. They appear here automatically as students submit.</p></div>`; return; }
+  const S = summary(d);
+  $("lt").innerHTML = `<div class="card"><h2>Results</h2>${statsHtml(S)}
     <h3>Ultimatum offers and Dictator gifts</h3>
-    <p class="sub">Share of players choosing each amount. If people only cared about money, Ultimatum offers would be tiny and Dictator gifts zero.</p>
     <div class="legend"><span><i style="background:var(--ug)"></i>Ultimatum offer</span><span><i style="background:var(--dg)"></i>Dictator gift</span></div>
     <div class="chart" id="ch1"></div>
-    ${s.length ? `<h3>Would the offer be accepted?</h3>
-    <p class="sub">Share of responders who would accept an offer of each size, from the minimum acceptable offers (${s.length} players).</p>
-    <div class="chart" id="ch2"></div>` : ""}
-    ${p.length ? `<h3>Live pairs: rejections by offer</h3><div class="tablewrap">${rejTable(p)}</div>` : ""}
-    <div class="row noprint" style="margin-top:14px"><button type="button" onclick="window.print()">Print / save as PDF</button></div>
-  </div>`;
-  barChart($("ch1"), shares(offers), shares(gifts), offers.length, gifts.length);
-  if (s.length) acceptChart($("ch2"), mins);
+    ${S.s.length ? `<h3>Share who would accept each offer</h3><div class="chart" id="ch2"></div>` : ""}</div>`;
+  barChart($("ch1"), shares(S.offers), shares(S.gifts), S.offers.length);
+  if (S.s.length) acceptChart($("ch2"), S.mins);
 }
-function rejTable(p) {
-  const rows = BINS.map((b, i) => { const g = p.filter((d) => binOf(pct(d.o, d.stake)) === i); return [b, g.length, g.filter((d) => d.r === "R").length]; }).filter((r) => r[1]);
-  return `<table><tr><th>Offer</th><th class="num">Pairs</th><th class="num">Rejected</th><th class="num">Rejection rate</th></tr>
-    ${rows.map(([b, n, r]) => `<tr><td>${b}</td><td class="num">${n}</td><td class="num">${r}</td><td class="num">${Math.round((100 * r) / n)}%</td></tr>`).join("")}</table>`;
+function present() {
+  const d = sessionData(), S = summary(d), s = curSession();
+  view(`<div id="pres">
+    <div class="row noprint" style="justify-content:space-between;margin-bottom:12px"><h2 style="font-size:30px;margin:0">Class results · ${esc(s.code)}</h2>
+      <div class="row"><span class="pill" style="font-size:16px">${d.length} players</span><button type="button" id="fs">Full screen</button><button type="button" id="px">Back</button></div></div>
+    ${!d.length ? `<div class="card"><p style="font-size:22px">Waiting for results…</p></div>` : `${statsHtml(S, true)}
+    <div class="card" style="margin-top:14px"><h3 style="margin-top:0;font-size:20px">Ultimatum offers and Dictator gifts</h3>
+      <div class="legend" style="font-size:16px"><span><i style="background:var(--ug)"></i>Ultimatum offer</span><span><i style="background:var(--dg)"></i>Dictator gift</span></div>
+      <div class="chart" id="pc1"></div></div>
+    ${S.s.length ? `<div class="card"><h3 style="margin-top:0;font-size:20px">Share who would accept each offer</h3><div class="chart" id="pc2"></div></div>` : ""}`}</div>`, true);
+  if (d.length) { barChart($("pc1"), shares(S.offers), shares(S.gifts), S.offers.length); if (S.s.length) acceptChart($("pc2"), S.mins); }
+  $("px").onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); lecturer(LTAB); };
+  $("fs").onclick = () => document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {});
+  startPoll();
 }
+
+/* ---------- charts ---------- */
 const tip = $("tip");
-function hover(el, chart, html) {
-  el.addEventListener("mousemove", (e) => { const r = chart.getBoundingClientRect(); tip.innerHTML = html; tip.style.display = "block"; tip.style.left = e.clientX + 12 + "px"; tip.style.top = e.clientY + window.scrollY - 34 + "px"; });
+function hover(el, html) {
+  el.addEventListener("mousemove", (e) => { tip.innerHTML = html; tip.style.display = "block"; tip.style.left = e.pageX + 12 + "px"; tip.style.top = e.pageY - 36 + "px"; });
   el.addEventListener("mouseleave", () => (tip.style.display = "none"));
 }
-function barChart(host, a, b, na, nb) {
-  const W = 860, H = 300, L = 44, R = 10, T = 14, B = 46, n = 11, gw = (W - L - R) / n, bw = Math.min(22, (gw - 10) / 2);
+function barChart(host, a, b, n) {
+  const W = 860, H = 300, L = 44, R = 10, T = 14, B = 46, gw = (W - L - R) / 11, bw = Math.min(22, (gw - 10) / 2);
   const top = Math.max(10, Math.ceil(Math.max(...a, ...b) / 10) * 10), y = (v) => T + (H - T - B) * (1 - v / top);
   let g = "";
-  for (let t = 0; t <= top; t += top > 50 ? 20 : 10) g += `<line class="axis" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke-width="1"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`;
-  const bar = (x, v, col, cls) => { const h = Math.max(0, y(0) - y(v)), r = Math.min(4, h); return v > 0 ? `<path class="${cls}" d="M${x},${y(0)} v${-(h - r)} q0,${-r} ${r},${-r} h${bw - 2 * r} q${r},0 ${r},${r} v${h - r} z" fill="${col}"/>` : ""; };
-  for (let i = 0; i < n; i++) {
+  for (let t = 0; t <= top; t += top > 50 ? 20 : 10) g += `<line class="axis" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`;
+  const bar = (x, v, col) => { const h = Math.max(0, y(0) - y(v)), r = Math.min(4, h); return v > 0 ? `<path d="M${x},${y(0)} v${-(h - r)} q0,${-r} ${r},${-r} h${bw - 2 * r} q${r},0 ${r},${r} v${h - r} z" fill="${col}"/>` : ""; };
+  for (let i = 0; i < 11; i++) {
     const x0 = L + i * gw + (gw - 2 * bw - 2) / 2;
-    g += `<g data-i="${i}">${bar(x0, a[i], "var(--ug)", "")}${bar(x0 + bw + 2, b[i], "var(--dg)", "")}<rect x="${L + i * gw}" y="${T}" width="${gw}" height="${H - T - B}" fill="transparent"/></g>`;
+    g += `<g data-i="${i}">${bar(x0, a[i], "var(--ug)")}${bar(x0 + bw + 2, b[i], "var(--dg)")}<rect x="${L + i * gw}" y="${T}" width="${gw}" height="${H - T - B}" fill="transparent"/></g>`;
     g += `<text x="${L + i * gw + gw / 2}" y="${H - B + 16}" text-anchor="middle">${BINS[i]}</text>`;
   }
   g += `<text x="${(W + L) / 2}" y="${H - 6}" text-anchor="middle">Amount given, as a share of the stake</text>`;
-  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Distribution of Ultimatum offers and Dictator gifts">${g}</svg>`;
-  host.querySelectorAll("g[data-i]").forEach((el) => { const i = +el.dataset.i; hover(el, host, `<b>${BINS[i]}</b><br>Ultimatum: ${Math.round(a[i])}% of ${na}<br>Dictator: ${Math.round(b[i])}% of ${nb}`); });
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ultimatum offers and Dictator gifts">${g}</svg>`;
+  host.querySelectorAll("g[data-i]").forEach((el) => { const i = +el.dataset.i; hover(el, `<b>${BINS[i]}</b><br>Ultimatum: ${Math.round(a[i])}%<br>Dictator: ${Math.round(b[i])}%<br>of ${n} players`); });
 }
 function acceptChart(host, mins) {
   const W = 860, H = 260, L = 44, R = 16, T = 14, B = 46;
@@ -623,82 +747,98 @@ function acceptChart(host, mins) {
   xs.forEach((x, i) => (g += `<circle cx="${X(x)}" cy="${Y(acc[i])}" r="5" fill="var(--ug)" stroke="var(--card)" stroke-width="2"/><circle data-i="${i}" cx="${X(x)}" cy="${Y(acc[i])}" r="16" fill="transparent"/>`));
   g += `<text x="${(W + L) / 2}" y="${H - 6}" text-anchor="middle">Offer, as a share of the stake</text>`;
   host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of responders who would accept each offer">${g}</svg>`;
-  host.querySelectorAll("circle[data-i]").forEach((el) => { const i = +el.dataset.i; hover(el, host, `Offer ${xs[i]}%: ${Math.round(acc[i])}% would accept`); });
+  host.querySelectorAll("circle[data-i]").forEach((el) => { const i = +el.dataset.i; hover(el, `Offer ${xs[i]}%: ${Math.round(acc[i])}% would accept`); });
 }
 
-/* ---------- lecturer: random matching (solo players, ring matching) ---------- */
-function shuffle(a) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
-let MATCH = store.get("match", null);
-function runMatch() {
-  const s = DATA.filter((d) => d.t === "S");
-  if (s.length < 2) return null;
-  const pay = Object.fromEntries(s.map((d) => [d.n, { n: d.n, uP: 0, uR: 0, dK: 0, dR: 0, uPartnerP: "", uPartnerR: "", uAcc: "", uRecvAcc: "" }]));
-  const u = shuffle(s), dd = shuffle(s), rows = [];
+/* ---------- pairing: random ring, so every student proposes once and responds once ---------- */
+function shuffle(a) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+function makePairs(list) {
+  const o = Object.fromEntries(list.map((d) => [d.uid, { session: CUR, uid: d.uid, name: d.name, offer_made: d.o, offer_made_result: "", offer_received: 0, offer_received_result: "",
+    ug_earnings: 0, dg_given: d.g, dg_received: 0, dg_earnings: 0, total: 0, _proposed_to: "", _offer_from: "", _gift_from: "" }]));
+  const u = shuffle(list), g = shuffle(list);
   u.forEach((p, i) => {
-    const r = u[(i + 1) % u.length], scale = r.stake / p.stake, offer = p.o * scale, acc = offer >= r.m;
-    pay[p.n].uP = acc ? p.stake - p.o : 0; pay[p.n].uPartnerP = r.n; pay[p.n].uAcc = acc ? "Accepted" : "Rejected";
-    pay[r.n].uR = acc ? offer : 0; pay[r.n].uPartnerR = p.n; pay[r.n].uRecvAcc = acc ? "Accepted" : "Rejected";
-    rows.push({ p: p.n, r: r.n, o: p.o, m: r.m, acc });
+    const r = u[(i + 1) % u.length], offer = (p.o * r.stake) / p.stake, ok = offer >= r.m;
+    o[p.uid].offer_made_result = ok ? "accepted" : "rejected"; o[p.uid].ug_earnings += ok ? p.stake - p.o : 0; o[p.uid]._proposed_to = r.name;
+    o[r.uid].offer_received = Math.round(offer); o[r.uid].offer_received_result = ok ? "accepted" : "rejected"; o[r.uid].ug_earnings += ok ? Math.round(offer) : 0; o[r.uid]._offer_from = p.name;
   });
-  dd.forEach((p, i) => { const r = dd[(i + 1) % dd.length]; pay[p.n].dK = p.stake - p.g; pay[r.n].dR += p.g * (r.stake / p.stake); });
-  return { when: new Date().toLocaleString(), rows, pay: Object.values(pay), stake: s[0].stake };
+  g.forEach((p, i) => { const r = g[(i + 1) % g.length]; o[p.uid].dg_earnings += p.stake - p.g; o[r.uid].dg_received = Math.round((p.g * r.stake) / p.stake); o[r.uid].dg_earnings += o[r.uid].dg_received; o[r.uid]._gift_from = p.name; });
+  Object.values(o).forEach((x) => (x.total = x.ug_earnings + x.dg_earnings));
+  return Object.values(o);
 }
-function lMatch() {
-  const nS = DATA.filter((d) => d.t === "S").length;
-  if (nS < 2) { $("lt").innerHTML = `<div class="card"><h2>Match and pay</h2><p>At least two solo players are needed.</p></div>`; return; }
-  const m = MATCH;
-  const rejected = m ? m.rows.filter((r) => !r.acc).length : 0;
-  $("lt").innerHTML = `<div class="card"><h2>Match and pay</h2>
-    <p class="sub">Each player is randomly matched twice in a ring: once as Proposer and once as Responder, so odd numbers of players work. The Dictator Game uses a new random ring.</p>
-    <button class="primary noprint" type="button" id="mBtn">${m ? "Match again" : "Match players now"}</button>
-    ${m ? `<p class="muted">Matched ${esc(m.when)} · ${m.rows.length} Ultimatum pairs · <b>${rejected}</b> offer${rejected === 1 ? "" : "s"} rejected.</p>
-    <div class="tablewrap"><table><tr><th>Player</th><th>Proposed to</th><th>Result</th><th>Received offer from</th><th>Result</th><th class="num">Ultimatum earnings</th><th class="num">Dictator earnings</th><th class="num">Total</th></tr>
-    ${m.pay.sort((a, b) => a.n.localeCompare(b.n)).map((x) => `<tr><td>${esc(x.n)}</td><td>${esc(x.uPartnerP)}</td><td>${x.uAcc}</td><td>${esc(x.uPartnerR)}</td><td>${x.uRecvAcc}</td>
-      <td class="num">${Math.round(x.uP + x.uR).toLocaleString()}</td><td class="num">${Math.round(x.dK + x.dR).toLocaleString()}</td><td class="num"><b>${Math.round(x.uP + x.uR + x.dK + x.dR).toLocaleString()}</b></td></tr>`).join("")}
-    </table></div>` : ""}
+function lPair() {
+  const list = sessionData().filter((d) => d.mode === "S"), saved = store.get("lpairs", {})[CUR];
+  $("lt").innerHTML = `<div class="card"><h2>Pair and pay</h2>
+    <p class="sub">Students are paired at random: each one proposes to one classmate and responds to another, and a new random pairing is used for the Dictator Game. Students see their own result in <b>My results</b>; they never see who their partner was.</p>
+    ${list.length < 2 ? `<p>At least two students are needed.</p>` : `<button class="primary noprint" type="button" id="go">${saved ? "Pair again (new random pairs)" : `Pair the ${list.length} students now`}</button>`}
+    <p class="err" id="e"></p>
+    ${saved ? `<p class="muted small">Paired ${new Date(saved.when).toLocaleString()} · ${saved.rows.length} students · ${saved.rows.filter((x) => x.offer_made_result === "rejected").length} offers rejected · ${saved.uploaded ? "students can see their results" : "<b>not yet sent</b>, will retry"}${list.length > saved.rows.length ? ` · <b>${list.length - saved.rows.length} new student(s) since pairing</b>` : ""}</p>
+      <div class="tablewrap"><table><tr><th>Student</th><th>Proposed to</th><th>Result</th><th>Got offer from</th><th>Result</th><th class="num">Ultimatum</th><th class="num">Dictator</th><th class="num">Total</th></tr>
+      ${saved.rows.slice().sort((a, b) => a.name.localeCompare(b.name)).map((x) => `<tr><td>${esc(x.name)}</td><td>${esc(x._proposed_to)}</td><td>${x.offer_made_result}</td><td>${esc(x._offer_from)}</td><td>${x.offer_received_result}</td><td class="num">${x.ug_earnings.toLocaleString()}</td><td class="num">${x.dg_earnings.toLocaleString()}</td><td class="num"><b>${x.total.toLocaleString()}</b></td></tr>`).join("")}</table></div>` : ""}
   </div>`;
-  $("mBtn").onclick = () => { if (MATCH && !confirm("Replace the current matching with a new random one?")) return; MATCH = runMatch(); store.set("match", MATCH); lecturer("match"); };
-}
-
-/* ---------- lecturer: data ---------- */
-function lData() {
-  $("lt").innerHTML = `<div class="card"><h2>Data</h2>
-    <div class="row noprint"><button type="button" id="csv">Download CSV</button><button type="button" id="codes">Download all codes</button><button type="button" id="clr">Clear all data</button></div>
-    <div class="tablewrap" style="margin-top:12px"><table><tr><th>Type</th><th>Player(s)</th><th class="num">Stake</th><th class="num">Offer</th><th>Min / response</th><th class="num">Dictator gift</th><th class="num">Guess</th><th></th></tr>
-    ${DATA.map((d, i) => d.t === "S"
-      ? `<tr><td>Solo</td><td>${esc(d.n)}</td><td class="num">${d.stake}</td><td class="num">${d.o}</td><td>min ${d.m}</td><td class="num">${d.g}</td><td class="num">${d.b}</td><td><button class="link" type="button" data-del="${i}">remove</button></td></tr>`
-      : `<tr><td>Pair</td><td>${esc(d.a)} → ${esc(d.b)}</td><td class="num">${d.stake}</td><td class="num">${d.o}</td><td>${d.r === "A" ? "accepted" : "rejected"}</td><td class="num">${d.g} (${esc(d.b)} → ${esc(d.a)})</td><td class="num">–</td><td><button class="link" type="button" data-del="${i}">remove</button></td></tr>`).join("")}
-    </table></div></div>`;
-  document.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { DATA.splice(+b.dataset.del, 1); store.set("data", DATA); lecturer("data"); }));
-  $("csv").onclick = () => download(`eco414-games-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(), "text/csv");
-  $("codes").onclick = () => download("eco414-codes.txt", DATA.map(codeOf).join("\n") + "\n", "text/plain");
-  $("clr").onclick = async () => {
-    if (!confirm(SERVER ? "Start a new session? The server keeps the old results in its results folder." : "Delete all collected results on this device? Download the CSV first if you need it.")) return;
-    if (SERVER) { try { await api("/api/clear", {}); } catch (e) { alert("Could not reach the server."); return; } LASTN = -1; }
-    DATA = []; MATCH = null; store.set("data", DATA); store.del("match"); lecturer(SERVER ? "join" : "collect");
+  if ($("go")) $("go").onclick = async () => {
+    if (saved && !confirm("Make new random pairs? Students' results will change.")) return;
+    const rows = makePairs(list), all = store.get("lpairs", {});
+    all[CUR] = { when: new Date().toISOString(), rows, uploaded: false }; store.set("lpairs", all);
+    await uploadPairs(); lecturer("pair");
   };
+  if (saved && !saved.uploaded) uploadPairs().then((ok) => ok && lecturer("pair"));
 }
-const codeOf = (d) => (d.t === "S" ? soloCode(d) : pairCode(d));
-function toCsv() {
-  const pay = MATCH ? Object.fromEntries(MATCH.pay.map((x) => [x.n, x])) : {};
-  const head = "mode,player,partner,stake,ug_offer,ug_min_accept,ug_response,dg_gift,dg_giver,guess_avg_offer,ug_offer_pct,dg_gift_pct,matched_ug_earnings,matched_dg_earnings";
-  const rows = DATA.map((d) => {
-    if (d.t === "S") { const x = pay[d.n]; return ["solo", d.n, "", d.stake, d.o, d.m, "", d.g, d.n, d.b, pct(d.o, d.stake).toFixed(1), pct(d.g, d.stake).toFixed(1), x ? Math.round(x.uP + x.uR) : "", x ? Math.round(x.dK + x.dR) : ""]; }
-    return ["pair", d.a, d.b, d.stake, d.o, "", d.r === "A" ? "accept" : "reject", d.g, d.b, "", pct(d.o, d.stake).toFixed(1), pct(d.g, d.stake).toFixed(1), "", ""];
-  });
-  return head + "\n" + rows.map((r) => r.join(",")).join("\n") + "\n";
+async function uploadPairs() {
+  const all = store.get("lpairs", {}), x = all[CUR]; if (!x) return false;
+  try { await bPost({ action: "saveOutcomes", key: KEY, session: CUR, rows: x.rows.map(({ _proposed_to, _offer_from, _gift_from, ...r }) => r) }); x.uploaded = true; store.set("lpairs", all); return true; }
+  catch (e) { return false; }
 }
 
-/* ---------- routing ---------- */
-$("homeBtn").onclick = () => { stopCam(); home(); };
-$("lectLink").onclick = () => lecturer();
-const atLecturer = location.hash === "#lecturer" || (SERVER && location.pathname.replace(/\/$/, "") === "/lecturer");
-if (SERVER) {
-  if (!atLecturer) { $("lectLink").remove(); document.querySelector("footer").textContent = "Your results go straight to your lecturer."; $("homeBtn").remove(); }
-  if (atLecturer) DATA = [];  // the server is the record; never mix in this browser's old local data
-  fetch("/api/settings").then((r) => r.json()).then((x) => { Object.assign(settings, x); if (!atLecturer && !S && !P) home(); }).catch(() => {});
+/* ---------- data and backup codes ---------- */
+function lData() {
+  const d = sessionData();
+  $("lt").innerHTML = `<div class="card"><h2>Data</h2>
+    <p class="sub">${SERVER ? "Everything is also saved on the laptop in the <i>results</i> folder." : "Everything is also in your Google Sheet (tab <i>Responses</i>)."}</p>
+    <div class="row noprint"><button type="button" id="csv">Download CSV</button><button type="button" id="sync">Sync now</button></div>
+    <div class="tablewrap" style="margin-top:12px"><table><tr><th>Name</th><th>Student no.</th><th>Mode</th><th class="num">Offer</th><th class="num">Min accept</th><th>Response</th><th class="num">Dictator gift</th><th class="num">Guess</th></tr>
+    ${d.map((x) => `<tr><td>${esc(x.name)}${x.partner ? " → " + esc(x.partner) : ""}</td><td>${esc(x.sno)}</td><td>${x.mode === "S" ? "own device" : "shared"}</td><td class="num">${x.o}</td><td class="num">${x.m === "" ? "–" : x.m}</td><td>${x.r === "A" ? "accepted" : x.r === "R" ? "rejected" : "–"}</td><td class="num">${x.g}</td><td class="num">${x.b === "" ? "–" : x.b}</td></tr>`).join("")}
+    </table></div></div>`;
+  $("csv").onclick = () => {
+    const pr = Object.fromEntries(((store.get("lpairs", {})[CUR] || {}).rows || []).map((x) => [x.uid, x]));
+    const head = "session,name,student_no,mode,partner,stake,ug_offer,ug_min_accept,ug_response,dg_gift,guess_avg_offer,ug_offer_pct,dg_gift_pct,ug_earnings,dg_earnings,total_earnings,submitted";
+    const q = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v);
+    const rows = d.map((x) => { const p = pr[x.uid] || {}; return [CUR, x.name, x.sno, x.mode === "S" ? "own_device" : "shared_device", x.partner, x.stake, x.o, x.m, x.r === "A" ? "accept" : x.r === "R" ? "reject" : "", x.g, x.b,
+      pct(x.o, x.stake).toFixed(1), pct(x.g, x.stake).toFixed(1), p.ug_earnings ?? "", p.dg_earnings ?? "", p.total ?? "", x.received || x.t].map(q).join(","); });
+    download(`eco414-${CUR}-${new Date().toISOString().slice(0, 10)}.csv`, head + "\n" + rows.join("\n") + "\n", "text/csv");
+  };
+  $("sync").onclick = async () => { $("sync").textContent = "Syncing…"; try { await pull(); } catch (e) {} lecturer("data"); };
 }
-if (atLecturer) lecturer(); else home();
+function lCodes() {
+  $("lt").innerHTML = `<div class="card"><h2>Add codes</h2>
+    <p class="sub">For students whose device never got online: scan the QR code on their screen, or paste their codes (for example from WhatsApp). They are added to this session and uploaded when you are online.</p>
+    <button class="primary" type="button" id="cam">📷 Scan QR codes</button><div id="camBox" style="margin-top:10px"></div>
+    <label for="paste">Paste codes</label><textarea id="paste" placeholder="S-${esc(CUR)}-TAWONGA-450-300-200-500-1000"></textarea>
+    <button type="button" id="add" style="margin-top:8px">Add codes</button>
+    <p class="notice" id="msg" style="margin-top:12px">Ready.</p></div>`;
+  const add = (recs, src) => {
+    recs.forEach((r) => { if (!r.session) r.session = CUR; });
+    const have = new Set(allData().map((x) => x.uid)), fresh = recs.filter((r) => !have.has(r.uid));
+    LOCAL.push(...fresh); store.set("llocal", LOCAL); queue(fresh); flush();
+    $("msg").textContent = !recs.length ? `No valid codes in ${src}.` : fresh.length ? `${fresh.length} added from ${src}.` : "Already added.";
+    lStat(); return fresh.length > 0;
+  };
+  $("add").onclick = () => { add(parseCodes($("paste").value), "the text"); $("paste").value = ""; };
+  $("cam").onclick = () => startCam($("camBox"), (t) => add(parseCodes(t), "the camera"), (m) => ($("msg").textContent = m));
+}
+function download(name, text, type) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ---------- start ---------- */
+$("homeBtn").onclick = home;
+$("lectLink").onclick = () => lecturer();
+if (SERVER) $("foot").textContent = "Your answers go straight to your lecturer.";
+const joinedNow = joinFromParams();
+updateNet();
+const atLecturer = location.hash === "#lecturer" || location.pathname.replace(/\/$/, "").endsWith("/lecturer");
+if (atLecturer) lecturer(); else if (joinedNow) joined(); else home();
+flush();
 if ("serviceWorker" in navigator && !SERVER && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
