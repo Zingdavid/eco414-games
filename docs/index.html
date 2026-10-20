@@ -12813,14 +12813,14 @@ function lecturer(tab) {
 }
 function pinGate(tab) {
   view(`<div class="card"><h2>Lecturer</h2><p class="sub">Enter the PIN shown in the server window on your laptop.</p>
-    <label for="pin">PIN</label><input type="text" id="pin" inputmode="numeric" maxlength="4" autocomplete="off">
+    <label for="pin">PIN</label><input type="text" id="pin" inputmode="numeric" maxlength="8" autocomplete="off">
     <p class="err" id="perr"></p><button class="primary big" type="button" id="pgo">Open the lecturer page</button></div>`);
   const go = async () => {
     PIN = $("pin").value.trim();
     try { await syncFromServer(); try { sessionStorage.setItem("eco414.pin", PIN); } catch (e) {} lecturer(tab); }
     catch (e) { PIN = ""; $("perr").textContent = e.message === "pin" ? "Wrong PIN." : "Cannot reach the server."; }
   };
-  $("pgo").onclick = go; $("pin").onkeydown = (e) => e.key === "Enter" && go(); $("pin").focus();
+  $("pgo").onclick = go; $("pin").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); $("pin").focus();
 }
 /* the server is the record of what was received; the lecturer page mirrors it */
 let LASTN = -1, POLL = null;
@@ -13101,7 +13101,7 @@ if (SERVER) {
   fetch("/api/settings").then((r) => r.json()).then((x) => { Object.assign(settings, x); if (!atLecturer && !S && !P) home(); }).catch(() => {});
 }
 if (atLecturer) lecturer(); else home();
-if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && !SERVER && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
 </html>
