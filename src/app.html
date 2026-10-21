@@ -789,20 +789,78 @@ async function uploadPairs() {
   catch (e) { return false; }
 }
 
+/* ---------- paired t-test: each student's offer vs their own minimum acceptable offer ---------- */
+function lgamma(x) {
+  const c = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+  let y = x, t = x + 5.5, s = 1.000000000190015;
+  t -= (x + 0.5) * Math.log(t); c.forEach((v) => (s += v / ++y));
+  return -t + Math.log((2.5066282746310005 * s) / x);
+}
+function betacf(a, b, x) {
+  let c = 1, d = 1 - ((a + b) * x) / (a + 1); d = 1 / (Math.abs(d) < 1e-30 ? 1e-30 : d); let h = d;
+  for (let m = 1; m <= 200; m++) {
+    const m2 = 2 * m; let aa = (m * (b - m) * x) / ((a + m2 - 1) * (a + m2));
+    d = 1 + aa * d; d = 1 / (Math.abs(d) < 1e-30 ? 1e-30 : d); c = 1 + aa / c; c = Math.abs(c) < 1e-30 ? 1e-30 : c; h *= d * c;
+    aa = (-(a + m) * (a + b + m) * x) / ((a + m2) * (a + m2 + 1));
+    d = 1 + aa * d; d = 1 / (Math.abs(d) < 1e-30 ? 1e-30 : d); c = 1 + aa / c; c = Math.abs(c) < 1e-30 ? 1e-30 : c;
+    const del = d * c; h *= del; if (Math.abs(del - 1) < 3e-14) break;
+  }
+  return h;
+}
+function ibeta(a, b, x) {
+  if (x <= 0) return 0; if (x >= 1) return 1;
+  const bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+  return x < (a + 1) / (a + b + 2) ? (bt * betacf(a, b, x)) / a : 1 - (bt * betacf(b, a, 1 - x)) / b;
+}
+const tTwoSided = (t, df) => ibeta(df / 2, 0.5, df / (df + t * t));
+function tCrit(df) { let lo = 0, hi = 100; for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; tTwoSided(m, df) > 0.05 ? (lo = m) : (hi = m); } return (lo + hi) / 2; }
+function pairedT(d, A, B) {
+  // A, B: functions giving the two amounts for one student ("" when not available)
+  const s = d.filter((x) => A(x) !== "" && B(x) !== "" && !isNaN(A(x)) && !isNaN(B(x))), n = s.length;
+  if (n < 2) return { n };
+  const diff = s.map((x) => A(x) - B(x)), md = mean(diff), sd = Math.sqrt(diff.reduce((a, v) => a + (v - md) ** 2, 0) / (n - 1)), se = sd / Math.sqrt(n), df = n - 1;
+  const t = se > 0 ? md / se : NaN, p = se > 0 ? tTwoSided(Math.abs(t), df) : NaN, tc = tCrit(df);
+  return { n, mo: mean(s.map(A)), mm: mean(s.map(B)), md, sd, se, df, t, p, lo: md - tc * se, hi: md + tc * se };
+}
+const TESTS = [
+  { title: "Offer vs minimum acceptable offer (paired t-test)", a: "Mean offer", b: "Mean minimum",
+    note: "Each student is both a proposer and a responder, so the test compares each student's Ultimatum offer with their own minimum acceptable offer (difference = offer − minimum).",
+    A: (x) => (x.mode === "S" && x.m !== "" ? x.o : ""), B: (x) => (x.mode === "S" && x.m !== "" ? x.m : ""), sig: (up) => `Students offer significantly ${up ? "more" : "less"} than they would accept`,
+    need: "Needs at least two students who played on their own device." },
+  { title: "Ultimatum offer vs Dictator gift (paired t-test)", a: "Mean offer", b: "Mean gift",
+    note: "Each student both makes an Ultimatum offer and gives a Dictator gift, so the test compares the two for the same student (difference = offer − gift). A positive difference means part of the Ultimatum offer is strategic (fear of rejection) rather than pure generosity.",
+    A: (x) => x.o, B: (x) => x.g, sig: (up) => `Students offer significantly ${up ? "more in the Ultimatum game than they give in the Dictator game" : "less in the Ultimatum game than they give in the Dictator game"}`,
+    need: "Needs at least two students." },
+];
+function tTestHtml(T, cur, X) {
+  const r = (v, k = 1) => (isNaN(v) ? "–" : (+v).toLocaleString(undefined, { maximumFractionDigits: k, minimumFractionDigits: k }));
+  if (T.n < 2) return `<div class="card"><h3 style="margin-top:0">${X.title}</h3><p class="muted">${X.need}</p></div>`;
+  const pTxt = isNaN(T.p) ? "–" : T.p < 0.001 ? "&lt; 0.001" : T.p.toFixed(3);
+  const verdict = isNaN(T.p) ? "Every student has the same difference, so the test cannot be computed."
+    : T.p < 0.05 ? `${X.sig(T.md > 0)} (5% level).`
+    : "The difference is not statistically significant at the 5% level.";
+  return `<div class="card"><h3 style="margin-top:0">${X.title}</h3>
+    <p class="sub">${X.note}</p>
+    <div class="tablewrap"><table>
+      <tr><th>Students</th><th class="num">${X.a}</th><th class="num">${X.b}</th><th class="num">Mean difference</th><th class="num">SD of difference</th><th class="num">t</th><th class="num">df</th><th class="num">p (two-sided)</th><th class="num">95% CI of difference</th></tr>
+      <tr><td>${T.n}</td><td class="num">${r(T.mo)}</td><td class="num">${r(T.mm)}</td><td class="num"><b>${r(T.md)}</b></td><td class="num">${r(T.sd)}</td><td class="num">${r(T.t, 2)}</td><td class="num">${T.df}</td><td class="num"><b>${pTxt}</b></td><td class="num">${r(T.lo)} to ${r(T.hi)}</td></tr>
+    </table></div><p class="small" style="margin-bottom:0">${verdict} Amounts in ${esc(cur || "")}.</p></div>`;
+}
+
 /* ---------- data and backup codes ---------- */
 function lData() {
-  const d = sessionData();
+  const d = sessionData(), dif = (x) => (x.mode === "S" && x.m !== "" ? x.o - x.m : ""), dg = (x) => x.o - x.g;
   $("lt").innerHTML = `<div class="card"><h2>Data</h2>
     <p class="sub">${SERVER ? "Everything is also saved on the laptop in the <i>results</i> folder." : "Everything is also in your Google Sheet (tab <i>Responses</i>)."}</p>
     <div class="row noprint"><button type="button" id="csv">Download CSV</button><button type="button" id="sync">Sync now</button></div>
-    <div class="tablewrap" style="margin-top:12px"><table><tr><th>Name</th><th>Student no.</th><th>Mode</th><th class="num">Offer</th><th class="num">Min accept</th><th>Response</th><th class="num">Dictator gift</th><th class="num">Guess</th></tr>
-    ${d.map((x) => `<tr><td>${esc(x.name)}${x.partner ? " → " + esc(x.partner) : ""}</td><td>${esc(x.sno)}</td><td>${x.mode === "S" ? "own device" : "shared"}</td><td class="num">${x.o}</td><td class="num">${x.m === "" ? "–" : x.m}</td><td>${x.r === "A" ? "accepted" : x.r === "R" ? "rejected" : "–"}</td><td class="num">${x.g}</td><td class="num">${x.b === "" ? "–" : x.b}</td></tr>`).join("")}
-    </table></div></div>`;
+    <div class="tablewrap" style="margin-top:12px"><table><tr><th>Name</th><th>Student no.</th><th>Mode</th><th class="num">Offer</th><th class="num">Min accept</th><th class="num">Offer − min</th><th>Response</th><th class="num">Dictator gift</th><th class="num">Offer − gift</th><th class="num">Guess</th></tr>
+    ${d.map((x) => `<tr><td>${esc(x.name)}${x.partner ? " → " + esc(x.partner) : ""}</td><td>${esc(x.sno)}</td><td>${x.mode === "S" ? "own device" : "shared"}</td><td class="num">${x.o}</td><td class="num">${x.m === "" ? "–" : x.m}</td><td class="num">${dif(x) === "" ? "–" : dif(x)}</td><td>${x.r === "A" ? "accepted" : x.r === "R" ? "rejected" : "–"}</td><td class="num">${x.g}</td><td class="num">${dg(x)}</td><td class="num">${x.b === "" ? "–" : x.b}</td></tr>`).join("")}
+    </table></div></div>${TESTS.map((X) => tTestHtml(pairedT(d, X.A, X.B), (curSession() || {}).cur, X)).join("")}`;
   $("csv").onclick = () => {
     const pr = Object.fromEntries(((store.get("lpairs", {})[CUR] || {}).rows || []).map((x) => [x.uid, x]));
-    const head = "session,name,student_no,mode,partner,stake,ug_offer,ug_min_accept,ug_response,dg_gift,guess_avg_offer,ug_offer_pct,dg_gift_pct,ug_earnings,dg_earnings,total_earnings,submitted";
+    const head = "session,name,student_no,mode,partner,stake,ug_offer,ug_min_accept,offer_minus_min,ug_response,dg_gift,offer_minus_gift,guess_avg_offer,ug_offer_pct,dg_gift_pct,ug_earnings,dg_earnings,total_earnings,submitted";
     const q = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v);
-    const rows = d.map((x) => { const p = pr[x.uid] || {}; return [CUR, x.name, x.sno, x.mode === "S" ? "own_device" : "shared_device", x.partner, x.stake, x.o, x.m, x.r === "A" ? "accept" : x.r === "R" ? "reject" : "", x.g, x.b,
+    const rows = d.map((x) => { const p = pr[x.uid] || {}; return [CUR, x.name, x.sno, x.mode === "S" ? "own_device" : "shared_device", x.partner, x.stake, x.o, x.m, dif(x), x.r === "A" ? "accept" : x.r === "R" ? "reject" : "", x.g, dg(x), x.b,
       pct(x.o, x.stake).toFixed(1), pct(x.g, x.stake).toFixed(1), p.ug_earnings ?? "", p.dg_earnings ?? "", p.total ?? "", x.received || x.t].map(q).join(","); });
     download(`eco414-${CUR}-${new Date().toISOString().slice(0, 10)}.csv`, head + "\n" + rows.join("\n") + "\n", "text/csv");
   };
