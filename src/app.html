@@ -708,7 +708,8 @@ function present() {
     <div class="card" style="margin-top:14px"><h3 style="margin-top:0;font-size:20px">Ultimatum offers and Dictator gifts</h3>
       <div class="legend" style="font-size:16px"><span><i style="background:var(--ug)"></i>Ultimatum offer</span><span><i style="background:var(--dg)"></i>Dictator gift</span></div>
       <div class="chart" id="pc1"></div></div>
-    ${S.s.length ? `<div class="card"><h3 style="margin-top:0;font-size:20px">Share who would accept each offer</h3><div class="chart" id="pc2"></div></div>` : ""}`}</div>`, true);
+    ${S.s.length ? `<div class="card"><h3 style="margin-top:0;font-size:20px">Share who would accept each offer</h3><div class="chart" id="pc2"></div></div>` : ""}
+    ${presentTests(d, s.cur)}`}</div>`, true);
   if (d.length) { barChart($("pc1"), shares(S.offers), shares(S.gifts), S.offers.length); if (S.s.length) acceptChart($("pc2"), S.mins); }
   $("px").onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); lecturer(LTAB); };
   $("fs").onclick = () => document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {});
@@ -845,6 +846,23 @@ function tTestHtml(T, cur, X) {
       <tr><th>Students</th><th class="num">${X.a}</th><th class="num">${X.b}</th><th class="num">Mean difference</th><th class="num">SD of difference</th><th class="num">t</th><th class="num">df</th><th class="num">p (two-sided)</th><th class="num">95% CI of difference</th></tr>
       <tr><td>${T.n}</td><td class="num">${r(T.mo)}</td><td class="num">${r(T.mm)}</td><td class="num"><b>${r(T.md)}</b></td><td class="num">${r(T.sd)}</td><td class="num">${r(T.t, 2)}</td><td class="num">${T.df}</td><td class="num"><b>${pTxt}</b></td><td class="num">${r(T.lo)} to ${r(T.hi)}</td></tr>
     </table></div><p class="small" style="margin-bottom:0">${verdict} Amounts in ${esc(cur || "")}.</p></div>`;
+}
+
+function presentTests(d, cur) {
+  // projector version of the paired t-tests: large type, one row per test, no names
+  const rows = TESTS.map((X) => [X, pairedT(d, X.A, X.B)]).filter(([, T]) => T.n >= 2);
+  if (!rows.length) return "";
+  const r = (v) => (isNaN(v) ? "–" : Math.round(v).toLocaleString());
+  const pTxt = (p) => (isNaN(p) ? "–" : p < 0.001 ? "&lt; 0.001" : p.toFixed(3));
+  const yes = (T) => !isNaN(T.p) && T.p < 0.05;
+  return `<div class="card"><h3 style="margin-top:0;font-size:20px">Are the differences real? (paired t-tests)</h3>
+    <div class="tablewrap"><table style="font-size:18px">
+      <tr><th>Comparison</th><th class="num">Average</th><th class="num">Compared with</th><th class="num">Difference</th><th class="num">t</th><th class="num">p</th><th>Verdict (5% level)</th></tr>
+      ${rows.map(([X, T]) => `<tr><td>${X.title.replace(" (paired t-test)", "")}</td><td class="num">${r(T.mo)}</td><td class="num">${r(T.mm)}</td>
+        <td class="num"><b>${T.md > 0 ? "+" : ""}${r(T.md)}</b></td><td class="num">${isNaN(T.t) ? "–" : T.t.toFixed(2)}</td><td class="num"><b>${pTxt(T.p)}</b></td>
+        <td>${yes(T) ? "<b>Significant</b>" : "Not significant"}</td></tr>`).join("")}
+    </table></div>
+    <p class="small" style="margin-bottom:0;font-size:15px">Each student played both roles, so each comparison is within the same student. Amounts in ${esc(cur || "")}; ${rows.map(([, T]) => T.n).join(" and ")} students.</p></div>`;
 }
 
 /* ---------- data and backup codes ---------- */
